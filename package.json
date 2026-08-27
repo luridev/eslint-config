@@ -1,0 +1,58 @@
+{
+  "name": "@protoapps/eslint-config",
+  "version": "0.1.0",
+  "description": "Opinionated ESLint flat config for TypeScript and Vue projects",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "npm run build && node --test",
+    "verify": "npm run lint && npm run typecheck && npm test && npm pack --dry-run",
+    "prepare": "npm run build"
+  },
+  "peerDependencies": {
+    "eslint": "^10.0.0",
+    "typescript": "~6.0.0"
+  },
+  "dependencies": {
+    "@eslint/js": "10.0.1",
+    "@stylistic/eslint-plugin": "5.10.0",
+    "eslint-import-resolver-typescript": "4.4.5",
+    "eslint-plugin-import-x": "4.17.1",
+    "eslint-plugin-unused-imports": "4.4.1",
+    "eslint-plugin-vue": "10.9.2",
+    "eslint-plugin-vuejs-accessibility": "2.5.0",
+    "typescript-eslint": "8.63.0",
+    "vue-eslint-parser": "10.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "10.6.0",
+    "globals": "17.7.0",
+    "jiti": "2.7.0",
+    "typescript": "6.0.3"
+  }
+}
