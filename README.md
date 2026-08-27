@@ -11,8 +11,6 @@ Vue accessibility checks.
 
 ## Installation
 
-The package is not published yet. After publication, install it together with its peer dependencies:
-
 ```sh
 npm install --save-dev @protoapps/eslint-config eslint typescript
 ```
