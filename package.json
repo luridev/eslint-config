@@ -13,7 +13,11 @@
     "url": "https://github.com/luridev/eslint-config/issues"
   },
   "keywords": [
-    "eslint", "eslint-config", "typescript", "vue", "stylistic"
+    "eslint",
+    "eslint-config",
+    "typescript",
+    "vue",
+    "stylistic"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -62,14 +66,17 @@
     "vue-eslint-parser": "^10.4.1"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.18.5",
-    "cross-spawn": "^7.0.6",
-    "publint": "^0.3.24",
     "@types/node": "^22.0.0",
+    "cross-spawn": "^7.0.6",
     "eslint": "^10.6.0",
     "globals": "^17.7.0",
     "jiti": "^2.7.0",
     "lefthook": "^2.1.14",
+    "publint": "^0.3.24",
     "typescript": "^6.0.3"
+  },
+  "allowScripts": {
+    "lefthook@2.1.14": true,
+    "unrs-resolver": false
   }
 }

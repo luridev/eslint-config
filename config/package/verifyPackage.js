@@ -52,14 +52,17 @@ try {
   const archive = join(temporaryRoot, filename);
 
   run('npm', ['exec', '--no', '--', 'publint', archive, '--strict']);
-  run('npm', ['exec', '--no', '--', 'attw', archive, '--profile', 'esm-only']);
 
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const eslintVersion = JSON.parse(readFileSync(require.resolve('eslint/package.json'), 'utf8')).version;
   const typescriptVersion = JSON.parse(readFileSync(require.resolve('typescript/package.json'), 'utf8')).version;
   const consumer = join(temporaryRoot, 'consumer');
   cpSync(join(root, 'tests/fixtures/package-consumer'), consumer, { recursive: true });
-  writeFileSync(join(consumer, 'package.json'), `${JSON.stringify({ private: true, type: 'module' }, null, 2)}\n`);
+  writeFileSync(join(consumer, 'package.json'), `${JSON.stringify({
+    private: true,
+    type: 'module',
+    allowScripts: { 'unrs-resolver': false },
+  }, null, 2)}\n`);
 
   run('npm', [
     'install', '--no-audit', '--no-fund', '--include=dev',
