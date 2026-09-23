@@ -442,7 +442,7 @@ export const createProtoConfig = ({
   additionalTypedFiles = [],
   additionalResolverExtensions = [],
   stylisticIgnores = [],
-}: ProtoConfigOptions) => {
+}: ProtoConfigOptions): Array<Linter.Config> => {
   const codeFiles = ['**/*.{js,ts,vue}', ...additionalCodeFiles];
   const typedFiles = ['**/*.{ts,vue}', ...additionalTypedFiles];
 
