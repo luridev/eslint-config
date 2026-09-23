@@ -3,6 +3,7 @@ import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import { defineConfig } from 'eslint/config';
 import { createTypeScriptImportResolver, defaultExtensions } from 'eslint-import-resolver-typescript';
+import packageJson from 'eslint-package-json';
 import importX, { createNodeResolver } from 'eslint-plugin-import-x';
 import unusedImports from 'eslint-plugin-unused-imports';
 import vue from 'eslint-plugin-vue';
@@ -217,6 +218,24 @@ const defineProtoConfig = ({
     linterOptions: {
       reportUnusedDisableDirectives: 'warn',
       reportUnusedInlineConfigs: 'warn',
+    },
+  },
+
+  {
+    name: 'proto/package-json',
+
+    files: ['**/package.json'],
+
+    extends: [packageJson.configs.recommended],
+
+    rules: {
+      'package-json/require-engines': 'off',
+      'package-json/sort-scripts': 'error',
+      'package-json/consistent-name-casing': 'error',
+      'package-json/description-format': 'error',
+      'package-json/no-exact-peer-dependencies': 'error',
+      'package-json/no-git-dependencies': 'error',
+      'package-json/no-local-dependencies': 'error',
     },
   },
 

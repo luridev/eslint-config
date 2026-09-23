@@ -80,6 +80,15 @@ test('factory produces a valid flat config', async () => {
   assert.ok(await effectiveConfigFor('entry.ts'));
 });
 
+test('factory includes the effective package.json config', async () => {
+  const config = await createEslint().calculateConfigForFile(join(consumerRoot, 'package.json'));
+
+  assert.ok(config);
+  assert.equal(config.language, config.plugins.json.languages.json);
+  assert.ok(config.plugins['package-json']);
+  assert.equal(config.rules['package-json/sort-scripts'][0], 2);
+});
+
 test('effective TypeScript config includes typed, Stylistic, import, and LF policies', async () => {
   const config = await effectiveConfigFor('entry.ts');
   const relativeImportRule = config.rules['@typescript-eslint/no-restricted-imports'];

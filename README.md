@@ -1,13 +1,7 @@
 # @protoapps/eslint-config
 
 Opinionated ESLint flat config for TypeScript and Vue projects with type-aware linting, Stylistic, import rules, and
-Vue accessibility checks.
-
-## Requirements
-
-- Node `^20.19.0 || ^22.13.0 || >=24`
-- ESLint `^10.0.0`
-- TypeScript `~6.0.0`
+Vue accessibility checks and automatic package.json linting.
 
 ## Installation
 
@@ -32,6 +26,9 @@ export default defineConfig(
   }),
 );
 ```
+
+Every `package.json` is included automatically by `createProtoConfig()`. No additional plugin installation or config is
+needed. Run `eslint .`, or add `package.json` to an existing ESLint invocation that uses explicit source-file globs.
 
 ## Options
 

@@ -2,16 +2,38 @@
   "name": "@protoapps/eslint-config",
   "version": "0.1.0",
   "description": "Opinionated ESLint flat config for TypeScript and Vue projects",
-  "author": "Anton V.",
   "license": "MIT",
+  "repository": "github:luridev/eslint-config",
   "homepage": "https://github.com/luridev/eslint-config#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/luridev/eslint-config.git"
+  "bugs": "https://github.com/luridev/eslint-config/issues",
+  "author": "Anton V.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
-  "bugs": {
-    "url": "https://github.com/luridev/eslint-config/issues"
+  "sideEffects": false,
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
+    "lint": "eslint .",
+    "prepublishOnly": "npm --dry-run=false run validate",
+    "test": "npm run build && node --test",
+    "test:package": "node config/package/verifyPackage.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "validate": "npm run lint && npm run typecheck && npm run test:package"
+  },
+  "files": [
+    "dist"
+  ],
   "keywords": [
     "eslint",
     "eslint-config",
@@ -19,45 +41,11 @@
     "vue",
     "stylistic"
   ],
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "sideEffects": false,
-  "engines": {
-    "node": "^20.19.0 || ^22.13.0 || >=24"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
-    "build": "npm run clean && tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json",
-    "lint": "eslint .",
-    "test": "npm run build && node --test",
-    "test:package": "node config/package/verifyPackage.js",
-    "validate": "npm run lint && npm run typecheck && npm run test:package",
-    "prepublishOnly": "npm --dry-run=false run validate"
-  },
-  "peerDependencies": {
-    "eslint": "^10.0.0",
-    "typescript": "~6.0.0"
-  },
   "dependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-package-json": "^1.0.0",
     "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-unused-imports": "^4.4.1",
     "eslint-plugin-vue": "^10.9.2",
@@ -74,6 +62,10 @@
     "lefthook": "^2.1.14",
     "publint": "^0.3.24",
     "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "eslint": "^10.4.0",
+    "typescript": "^6.0.0"
   },
   "allowScripts": {
     "lefthook@2.1.14": true,
