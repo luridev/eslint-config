@@ -26,6 +26,7 @@
     "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
     "lint": "eslint .",
     "prepublishOnly": "npm --dry-run=false run validate",
+    "release": "bumpp",
     "test": "npm run build && node --test",
     "test:package": "node config/package/verifyPackage.js",
     "typecheck": "tsc -p tsconfig.json",
@@ -51,6 +52,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "bumpp": "^12.3.0",
     "cross-spawn": "^7.0.6",
     "eslint": "^10.6.0",
     "globals": "^17.7.0",

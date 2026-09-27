@@ -18,6 +18,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "eslint.config.ts"
+    "eslint.config.ts",
+    "bump.config.ts"
   ]
 }
