@@ -6,14 +6,10 @@ import { createTypeScriptImportResolver, defaultExtensions } from 'eslint-import
 import packageJson from 'eslint-package-json';
 import importX, { createNodeResolver } from 'eslint-plugin-import-x';
 import unusedImports from 'eslint-plugin-unused-imports';
-import vue from 'eslint-plugin-vue';
-import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
 import tseslint from 'typescript-eslint';
 import type { Linter } from 'eslint';
 
 const typescriptFiles = ['**/*.ts'];
-const vueFiles = ['**/*.vue'];
-const stylisticFiles = [...typescriptFiles, ...vueFiles];
 
 const stylisticBaseline = stylistic.configs.customize({
   semi: true,
@@ -46,54 +42,6 @@ const coreRules: Linter.RulesRecord = {
   ],
 };
 
-const vueStylisticRules: Linter.RulesRecord = {
-  'vue/block-tag-newline': ['error', { singleline: 'always', multiline: 'always', maxEmptyLines: 0 }],
-  'vue/html-indent': [
-    'error',
-    2,
-    {
-      attribute: 1,
-      baseIndent: 1,
-      closeBracket: 0,
-      switchCase: 1,
-      alignAttributesVertically: false,
-    },
-  ],
-  'vue/html-quotes': ['error', 'double', { avoidEscape: true }],
-  'vue/first-attribute-linebreak': ['error', { singleline: 'beside', multiline: 'below' }],
-  'vue/html-self-closing': [
-    'error',
-    {
-      html: {
-        normal: 'never',
-        void: 'always',
-        component: 'always',
-      },
-      svg: 'always',
-      math: 'always',
-    },
-  ],
-  'vue/multiline-html-element-content-newline': 'off',
-  'vue/singleline-html-element-content-newline': 'off',
-  'vue/array-bracket-spacing': ['error', 'never'],
-  'vue/arrow-spacing': ['error', { before: true, after: true }],
-  'vue/block-spacing': ['error', 'always'],
-  'vue/brace-style': ['error', '1tbs', { allowSingleLine: true }],
-  'vue/comma-dangle': ['error', 'always-multiline'],
-  'vue/comma-spacing': ['error', { before: false, after: true }],
-  'vue/comma-style': ['error', 'last'],
-  'vue/dot-location': ['error', 'property'],
-  'vue/func-call-spacing': ['error', 'never'],
-  'vue/key-spacing': ['error', { beforeColon: false, afterColon: true }],
-  'vue/keyword-spacing': ['error', { before: true, after: true }],
-  'vue/object-curly-spacing': ['error', 'always'],
-  'vue/quote-props': ['error', 'as-needed'],
-  'vue/space-in-parens': ['error', 'never'],
-  'vue/space-infix-ops': 'error',
-  'vue/space-unary-ops': ['error', { words: true, nonwords: false }],
-  'vue/template-curly-spacing': ['error', 'never'],
-};
-
 const typescriptRules: Linter.RulesRecord = {
   '@typescript-eslint/consistent-type-imports': 'error',
   '@typescript-eslint/array-type': ['error', { default: 'generic', readonly: 'generic' }],
@@ -114,43 +62,6 @@ const typescriptRules: Linter.RulesRecord = {
       ],
     },
   ],
-};
-
-const vueRules: Linter.RulesRecord = {
-  'vue/attributes-order': ['error', { order: ['DEFINITION', 'LIST_RENDERING', 'CONDITIONALS', 'RENDER_MODIFIERS', 'GLOBAL', ['UNIQUE', 'SLOT'], 'TWO_WAY_BINDING', 'OTHER_DIRECTIVES', 'OTHER_ATTR', 'EVENTS', 'CONTENT'], alphabetical: false }],
-  'vue/block-lang': ['error', { script: { lang: 'ts' } }],
-  'vue/block-order': ['error', { order: ['script', 'template', 'style'] }],
-  'vue/component-api-style': ['error', ['script-setup']],
-  'vue/component-name-in-template-casing': 'error',
-  'vue/custom-event-name-casing': 'error',
-  'vue/define-emits-declaration': ['error', 'type-literal'],
-  'vue/define-macros-order': ['error', { order: ['defineOptions', 'defineProps', 'defineEmits', 'defineModel', 'defineSlots'], defineExposeLast: true }],
-  'vue/no-empty-component-block': 'error',
-  'vue/no-import-compiler-macros': 'error',
-  'vue/no-multiple-objects-in-class': 'error',
-  'vue/no-ref-object-reactivity-loss': 'error',
-  'vue/no-root-v-if': 'error',
-  'vue/no-setup-props-reactivity-loss': 'error',
-  'vue/no-static-inline-styles': 'error',
-  'vue/no-template-target-blank': 'error',
-  'vue/no-undef-components': 'error',
-  'vue/no-undef-properties': 'error',
-  'vue/no-unused-emit-declarations': 'error',
-  'vue/no-unused-refs': 'error',
-  'vue/no-use-v-else-with-v-for': 'error',
-  'vue/padding-line-between-blocks': ['error', 'always'],
-  'vue/padding-line-between-tags': 'error',
-  'vue/prefer-define-options': 'error',
-  'vue/prefer-separate-static-class': 'error',
-  'vue/prefer-true-attribute-shorthand': 'error',
-  'vue/prefer-use-template-ref': 'error',
-  'vue/require-default-prop': 'off',
-  'vue/require-emit-validator': 'error',
-  'vue/require-macro-variable-name': 'error',
-  'vue/require-typed-ref': 'error',
-  'vue/slot-name-casing': 'error',
-  'vue/v-for-delimiter-style': 'error',
-  'vue/v-on-handler-style': 'error',
 };
 
 const importRules: Linter.RulesRecord = {
@@ -197,20 +108,22 @@ const unusedRules: Linter.RulesRecord = {
 
 type ProtoConfigContext = {
   tsconfigRootDir: string;
-  vueVersion: string;
   codeFiles: Array<string>;
   typedFiles: Array<string>;
   additionalResolverExtensions: Array<string>;
   stylisticIgnores: Array<string>;
+  additionalStylisticFiles: Array<string>;
+  languageConfigs: Array<Linter.Config>;
 };
 
 const defineProtoConfig = ({
   tsconfigRootDir,
-  vueVersion,
   codeFiles,
   typedFiles,
   additionalResolverExtensions,
   stylisticIgnores,
+  additionalStylisticFiles,
+  languageConfigs,
 }: ProtoConfigContext) => defineConfig(
   {
     name: 'proto/linter-options',
@@ -259,7 +172,7 @@ const defineProtoConfig = ({
     settings: {
       'import-x/resolver-next': [
         createTypeScriptImportResolver({
-          extensions: [...defaultExtensions, '.vue', ...additionalResolverExtensions],
+          extensions: [...defaultExtensions, ...additionalResolverExtensions],
           project: join(tsconfigRootDir, 'tsconfig.json'),
         }),
         createNodeResolver(),
@@ -288,22 +201,7 @@ const defineProtoConfig = ({
     },
   },
 
-  {
-    name: 'proto/vue',
-
-    files: vueFiles,
-
-    extends: [vue.configs['flat/recommended-error'], vueAccessibility.configs['flat/recommended']],
-
-    languageOptions: {
-      parserOptions: {
-        parser: tseslint.parser,
-        projectService: true,
-        tsconfigRootDir,
-        extraFileExtensions: ['.vue'],
-      },
-    },
-  },
+  ...languageConfigs,
 
   {
     name: 'proto/common-rules',
@@ -326,30 +224,9 @@ const defineProtoConfig = ({
   },
 
   {
-    name: 'proto/vue-rules',
-
-    files: vueFiles,
-
-    rules: {
-      ...vueRules,
-      'vue/no-unsupported-features': ['error', { version: vueVersion }],
-      'vuejs-accessibility/label-has-for': [
-        'error',
-        {
-          required: {
-            some: ['nesting', 'id'],
-          },
-        },
-      ],
-      'vuejs-accessibility/no-aria-hidden-on-focusable': 'error',
-      'vuejs-accessibility/no-role-presentation-on-focusable': 'error',
-    },
-  },
-
-  {
     name: 'proto/linebreaks',
 
-    files: ['**/*.{js,ts,vue}'],
+    files: ['**/*.{js,ts}', ...additionalStylisticFiles],
     ignores: stylisticIgnores,
 
     plugins: {
@@ -364,7 +241,7 @@ const defineProtoConfig = ({
   {
     name: 'proto/stylistic',
 
-    files: stylisticFiles,
+    files: [...typescriptFiles, ...additionalStylisticFiles],
     ignores: stylisticIgnores,
 
     extends: [stylisticBaseline],
@@ -414,44 +291,40 @@ const defineProtoConfig = ({
       ],
     },
   },
-
-  {
-    name: 'proto/vue-stylistic',
-
-    files: vueFiles,
-    ignores: stylisticIgnores,
-
-    rules: vueStylisticRules,
-  },
 );
 
 export type ProtoConfigOptions = {
   tsconfigRootDir: string;
-  vueVersion: string;
 
   additionalCodeFiles?: Array<string>;
   additionalTypedFiles?: Array<string>;
   additionalResolverExtensions?: Array<string>;
   stylisticIgnores?: Array<string>;
+  /** Additional files for both the formatting baseline and LF policy. */
+  additionalStylisticFiles?: Array<string>;
+  /** Language presets/parser settings, after JS/TS presets and before explicit policy rules. */
+  languageConfigs?: Array<Linter.Config>;
 };
 
 export const createProtoConfig = ({
   tsconfigRootDir,
-  vueVersion,
   additionalCodeFiles = [],
   additionalTypedFiles = [],
   additionalResolverExtensions = [],
   stylisticIgnores = [],
-}: ProtoConfigOptions): Array<Linter.Config> => {
-  const codeFiles = ['**/*.{js,ts,vue}', ...additionalCodeFiles];
-  const typedFiles = ['**/*.{ts,vue}', ...additionalTypedFiles];
+  additionalStylisticFiles = [],
+  languageConfigs = [],
+}: ProtoConfigOptions, ...overrides: Array<Linter.Config>): Array<Linter.Config> => {
+  const codeFiles = ['**/*.{js,ts}', ...additionalCodeFiles];
+  const typedFiles = [...typescriptFiles, ...additionalTypedFiles];
 
-  return defineProtoConfig({
+  return defineConfig(defineProtoConfig({
     tsconfigRootDir,
-    vueVersion,
     codeFiles,
     typedFiles,
     additionalResolverExtensions,
     stylisticIgnores,
-  });
+    additionalStylisticFiles,
+    languageConfigs,
+  }), ...overrides);
 };

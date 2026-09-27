@@ -1,7 +1,7 @@
 {
   "name": "@protoapps/eslint-config",
-  "version": "0.2.1",
-  "description": "Opinionated ESLint flat config for TypeScript and Vue projects",
+  "version": "0.3.0",
+  "description": "Opinionated ESLint flat config for JavaScript, TypeScript, and Node projects",
   "license": "MIT",
   "repository": "github:luridev/eslint-config",
   "homepage": "https://github.com/luridev/eslint-config#readme",
@@ -38,7 +38,6 @@
     "eslint",
     "eslint-config",
     "typescript",
-    "vue",
     "stylistic"
   ],
   "dependencies": {
@@ -48,10 +47,7 @@
     "eslint-package-json": "^1.0.0",
     "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-unused-imports": "^4.4.1",
-    "eslint-plugin-vue": "^10.9.2",
-    "eslint-plugin-vuejs-accessibility": "^2.5.0",
-    "typescript-eslint": "^8.63.0",
-    "vue-eslint-parser": "^10.4.1"
+    "typescript-eslint": "^8.63.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

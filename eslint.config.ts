@@ -10,7 +10,6 @@ export default defineConfig(
   globalIgnores(['dist/**', 'tests/fixtures/**']),
   ...createProtoConfig({
     tsconfigRootDir,
-    vueVersion: '3.5.40',
   }),
   {
     name: 'repo/node',

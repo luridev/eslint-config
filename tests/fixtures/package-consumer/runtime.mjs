@@ -10,7 +10,6 @@ const eslint = new ESLint({
   overrideConfigFile: true,
   overrideConfig: createProtoConfig({
     tsconfigRootDir: consumer,
-    vueVersion: '3.5.40',
   }),
 });
 
