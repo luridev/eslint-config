@@ -3,7 +3,7 @@ import { dirname, join, normalize } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
-import { createProtoConfig } from '@protoapps/eslint-config';
+import { createProtoConfig } from '../dist/index.js';
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const consumerRoot = join(packageRoot, 'tests', 'fixtures', 'consumer');
