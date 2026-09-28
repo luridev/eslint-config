@@ -136,7 +136,10 @@ test('language and formatting extensions compose before policy rules and final o
       tsconfigRootDir: consumerRoot,
       additionalCodeFiles: ['**/*.code'],
       additionalStylisticFiles: ['**/*.code'],
-      languageConfigs: [{ files: ['**/*.code'], rules: { eqeqeq: 'off', 'no-alert': 'error' } }],
+      languageConfigs: [[{
+        files: ['**/*.code'],
+        extends: [{ rules: { eqeqeq: 'off', 'no-alert': 'error' } }],
+      }]],
     }, { files: ['**/*.code'], rules: { 'no-console': 'off' } }),
   }).calculateConfigForFile(join(consumerRoot, 'src/sample.code'));
   assert.equal(config.rules.eqeqeq[0], 2);
@@ -157,4 +160,24 @@ test('native overrides support ignores and disabling individual typed rules', as
   const config = await eslint.calculateConfigForFile(join(consumerRoot, 'src/entry.ts'));
   assert.equal(config.rules['@typescript-eslint/no-restricted-imports'][0], 0);
   assert.equal(await eslint.isPathIgnored(join(consumerRoot, 'generated/output.ts')), true);
+});
+
+test('native extends and config arrays preserve scope and final override priority', async () => {
+  const eslint = new ESLint({
+    cwd: consumerRoot,
+    overrideConfigFile: true,
+    overrideConfig: createProtoConfig({ tsconfigRootDir: consumerRoot },
+      {
+        files: ['**/entry.ts'],
+        extends: [[{ files: ['**/*.ts'], rules: { 'no-alert': 'error', eqeqeq: 'off' } }]],
+      },
+      [[{ files: ['**/entry.ts'], rules: { eqeqeq: 'warn' } }]]),
+  });
+  const entry = await eslint.calculateConfigForFile(join(consumerRoot, 'src/entry.ts'));
+  const other = await eslint.calculateConfigForFile(join(consumerRoot, 'src/standard.ts'));
+
+  assert.equal(entry.rules['no-alert'][0], 2);
+  assert.equal(entry.rules.eqeqeq[0], 1);
+  assert.equal(other.rules['no-alert'], undefined);
+  assert.equal(other.rules.eqeqeq[0], 2);
 });

@@ -113,7 +113,7 @@ type ProtoConfigContext = {
   additionalResolverExtensions: Array<string>;
   stylisticIgnores: Array<string>;
   additionalStylisticFiles: Array<string>;
-  languageConfigs: Array<Linter.Config>;
+  languageConfigs: Parameters<typeof defineConfig>;
 };
 
 const defineProtoConfig = ({
@@ -300,10 +300,8 @@ export type ProtoConfigOptions = {
   additionalTypedFiles?: Array<string>;
   additionalResolverExtensions?: Array<string>;
   stylisticIgnores?: Array<string>;
-  /** Additional files for both the formatting baseline and LF policy. */
   additionalStylisticFiles?: Array<string>;
-  /** Language presets/parser settings, after JS/TS presets and before explicit policy rules. */
-  languageConfigs?: Array<Linter.Config>;
+  languageConfigs?: Parameters<typeof defineConfig>;
 };
 
 export const createProtoConfig = ({
@@ -314,7 +312,7 @@ export const createProtoConfig = ({
   stylisticIgnores = [],
   additionalStylisticFiles = [],
   languageConfigs = [],
-}: ProtoConfigOptions, ...overrides: Array<Linter.Config>): Array<Linter.Config> => {
+}: ProtoConfigOptions, ...overrides: Parameters<typeof defineConfig>): ReturnType<typeof defineConfig> => {
   const codeFiles = ['**/*.{js,ts}', ...additionalCodeFiles];
   const typedFiles = [...typescriptFiles, ...additionalTypedFiles];
 

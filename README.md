@@ -31,20 +31,35 @@ TS config. Relative TypeScript imports require an alias; LF line endings are enf
 | `additionalTypedFiles` | Additional globs for TypeScript rules. |
 | `additionalResolverExtensions` | Additional import resolution extensions. |
 | `additionalStylisticFiles` | Additional globs for Stylistic and LF rules. |
-| `languageConfigs` | Additional language presets and parser settings. |
+| `languageConfigs` | Advanced extension point for language and framework config packages. |
 | `stylisticIgnores` | Globs excluded from Stylistic and LF rules. |
 
 ## Overrides
 
-Pass native ESLint Flat Config objects after the options; they take precedence over the factory's rules:
+Pass Flat Config overrides after the options to customize rules:
 
 ```ts
 export default createProtoConfig(
-  { tsconfigRootDir: import.meta.dirname },
-  { ignores: ['dist/**'] },
+  {
+    tsconfigRootDir: import.meta.dirname,
+  },
   {
     files: ['**/*.ts'],
-    rules: { '@typescript-eslint/no-restricted-imports': 'off' },
+    rules: {
+      '@typescript-eslint/no-restricted-imports': 'off',
+    },
+  },
+);
+```
+
+Overrides accept the same format as ESLint's `defineConfig`, including `extends` and config arrays:
+
+```ts
+createProtoConfig(
+  options,
+  {
+    files: ['**/*.astro'],
+    extends: [astro.configs['flat/recommended']],
   },
 );
 ```
