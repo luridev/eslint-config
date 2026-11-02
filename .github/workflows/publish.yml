@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.server_url == 'https://github.com' && github.repository == 'luridev/eslint-config'
     runs-on: ubuntu-latest
 
     steps:

@@ -66,4 +66,4 @@ createProtoConfig(
 
 ## Development
 
-Run `npm run validate` for lint, typecheck, build, tests, and packed-package checks.
+Run `npm run check:commit` for lint, typecheck, build, tests, and packed-package checks.
