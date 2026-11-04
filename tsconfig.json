@@ -19,6 +19,7 @@
   "include": [
     "src/**/*.ts",
     "eslint.config.ts",
+    "commitlint.config.ts",
     "bump.config.ts"
   ]
 }
