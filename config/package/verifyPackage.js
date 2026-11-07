@@ -8,6 +8,7 @@ import spawn from 'cross-spawn';
 
 const root = realpathSync(fileURLToPath(new URL('../../', import.meta.url)));
 const require = createRequire(import.meta.url);
+const vuePeers = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
 
 function run(command, args, cwd = root, capture = false) {
   const label = `${command} ${args.join(' ')}`;
@@ -47,33 +48,68 @@ process.stdout.write(`[package] Temporary root: ${temporaryRoot}\n`);
 try {
   const packed = JSON.parse(run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temporaryRoot], root, true));
   assert.equal(packed.length, 1, 'npm pack must produce one archive.');
-  const { filename } = packed[0];
+  const { filename, files } = packed[0];
   assert.equal(basename(filename), filename, 'The archive must remain inside the temporary root.');
   const archive = join(temporaryRoot, filename);
+  const packedFiles = new Set(files.map((file) => file.path));
+
+  for (const module of ['index', 'base', 'integrations/vue']) {
+    for (const extension of ['js', 'd.ts']) {
+      const filename = `dist/${module}.${extension}`;
+      assert.ok(packedFiles.has(filename), `The archive must contain ${filename}.`);
+    }
+  }
 
   run('npm', ['exec', '--no', '--', 'publint', archive, '--strict']);
 
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const eslintVersion = JSON.parse(readFileSync(require.resolve('eslint/package.json'), 'utf8')).version;
   const typescriptVersion = JSON.parse(readFileSync(require.resolve('typescript/package.json'), 'utf8')).version;
-  const consumer = join(temporaryRoot, 'consumer');
-  cpSync(join(root, 'tests/fixtures/package-consumer'), consumer, { recursive: true });
-  writeFileSync(join(consumer, 'package.json'), `${JSON.stringify({
-    private: true,
-    type: 'module',
-    allowScripts: { 'unrs-resolver': false },
-  }, null, 2)}\n`);
+  const npmCache = join(temporaryRoot, 'npm-cache');
 
-  run('npm', [
-    'install', '--no-audit', '--no-fund', '--include=dev',
-    archive, `eslint@${eslintVersion}`, `typescript@${typescriptVersion}`,
-  ], consumer);
+  const verifyConsumer = (fixture, plugins = [], scripts = ['runtime.mjs']) => {
+    const consumer = join(temporaryRoot, fixture);
+    cpSync(join(root, 'tests/fixtures', fixture), consumer, { recursive: true });
+    writeFileSync(join(consumer, 'package.json'), `${JSON.stringify({
+      private: true,
+      type: 'module',
+      allowScripts: { 'unrs-resolver': false },
+    }, null, 2)}\n`);
 
-  const installedPackage = realpathSync(join(consumer, 'node_modules', manifest.name));
-  assert.ok(installedPackage.startsWith(`${consumer}${sep}`), 'The package must be installed inside the consumer.');
+    run('npm', [
+      'install', '--no-audit', '--no-fund', '--include=dev', '--cache', npmCache,
+      archive, `eslint@${eslintVersion}`, `typescript@${typescriptVersion}`, ...plugins,
+    ], consumer);
 
-  run(process.execPath, [join(consumer, 'node_modules/typescript/bin/tsc'), '--noEmit'], consumer);
-  run(process.execPath, [join(consumer, 'runtime.mjs')], consumer);
+    const installedPackage = realpathSync(join(consumer, 'node_modules', manifest.name));
+    assert.ok(installedPackage.startsWith(`${consumer}${sep}`), 'The package must be installed inside the consumer.');
+
+    if (plugins.length === 0) {
+      const lock = JSON.parse(readFileSync(join(consumer, 'package-lock.json'), 'utf8'));
+
+      for (const peer of vuePeers) {
+        assert.ok(
+          !Object.keys(lock.packages).some((path) => path.endsWith(`node_modules/${peer}`)),
+          `The base-only installation must not contain ${peer}.`,
+        );
+      }
+    }
+
+    run(process.execPath, [join(consumer, 'node_modules/typescript/bin/tsc'), '--noEmit'], consumer);
+
+    for (const script of scripts) {
+      run(process.execPath, [join(consumer, script)], consumer);
+    }
+  };
+
+  verifyConsumer('package-consumer');
+
+  const plugins = vuePeers.map((name) => {
+    const { version } = JSON.parse(readFileSync(join(root, 'node_modules', name, 'package.json'), 'utf8'));
+
+    return `${name}@${version}`;
+  });
+  verifyConsumer('package-vue-consumer', plugins, ['runtime.mjs', 'disabled.mjs', 'broken-plugin.mjs']);
   process.stdout.write('Package verified successfully.\n');
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });

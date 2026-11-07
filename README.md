@@ -1,12 +1,11 @@
 # @protoapps/eslint-config
 
-ESLint flat config for JavaScript, TypeScript, Node, and npm packages with type-aware rules, import checks,
-Stylistic formatting, and package.json linting.
+Opinionated ESLint flat config for JavaScript, TypeScript, and Vue.
 
 ## Installation
 
 ```sh
-npm install --save-dev @protoapps/eslint-config eslint typescript
+npm install -D @protoapps/eslint-config eslint typescript
 ```
 
 ## Usage
@@ -19,24 +18,28 @@ export default createProtoConfig({
 });
 ```
 
-Run `eslint .` to lint JavaScript, TypeScript, and package.json files. TypeScript files must belong to the project's
-TS config. Relative TypeScript imports require an alias; LF line endings are enforced. Set environment globals as needed.
+## Vue
 
-## Options
+Install the additional ESLint plugins:
 
-| Option | Purpose |
-| --- | --- |
-| `tsconfigRootDir` | Required project root for TypeScript services and import resolution. |
-| `additionalCodeFiles` | Additional globs for common rules. |
-| `additionalTypedFiles` | Additional globs for TypeScript rules. |
-| `additionalResolverExtensions` | Additional import resolution extensions. |
-| `additionalStylisticFiles` | Additional globs for Stylistic and LF rules. |
-| `languageConfigs` | Advanced extension point for language and framework config packages. |
-| `stylisticIgnores` | Globs excluded from Stylistic and LF rules. |
+```sh
+npm install -D eslint-plugin-vue vue-eslint-parser eslint-plugin-vuejs-accessibility
+```
 
-## Overrides
+Enable Vue support and specify the target Vue version:
 
-Pass Flat Config overrides after the options to customize rules:
+```ts
+import { createProtoConfig } from '@protoapps/eslint-config';
+
+export default createProtoConfig({
+  tsconfigRootDir: import.meta.dirname,
+  vue: { version: '3.5.40' },
+});
+```
+
+## Customization
+
+Pass additional [ESLint Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files) entries after the options:
 
 ```ts
 export default createProtoConfig(
@@ -52,18 +55,10 @@ export default createProtoConfig(
 );
 ```
 
-Overrides accept the same format as ESLint's `defineConfig`, including `extends` and config arrays:
-
-```ts
-createProtoConfig(
-  options,
-  {
-    files: ['**/*.astro'],
-    extends: [astro.configs['flat/recommended']],
-  },
-);
-```
+Additional options for file patterns, import resolution, formatting exclusions, and language configurations are available through `ProtoConfigOptions`.
 
 ## Development
 
-Run `npm run check:commit` for lint, typecheck, build, tests, and packed-package checks.
+```sh
+npm run check:commit
+```

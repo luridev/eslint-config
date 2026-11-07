@@ -19,8 +19,8 @@ export default defineConfig(
     },
   },
   {
-    name: 'repo/eslint-config',
-    files: ['eslint.config.ts'],
+    name: 'repo/internal-imports',
+    files: ['eslint.config.ts', 'src/index.ts', 'src/integrations/vue.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': 'off',
     },

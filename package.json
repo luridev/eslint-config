@@ -1,7 +1,7 @@
 {
   "name": "@protoapps/eslint-config",
   "version": "0.3.2",
-  "description": "Opinionated ESLint flat config for JavaScript, TypeScript, and Node projects",
+  "description": "Opinionated ESLint flat config for JavaScript, TypeScript, Node, and optional Vue projects",
   "license": "MIT",
   "repository": "github:luridev/eslint-config",
   "homepage": "https://github.com/luridev/eslint-config#readme",
@@ -40,7 +40,9 @@
     "eslint",
     "eslint-config",
     "typescript",
-    "stylistic"
+    "stylistic",
+    "vue",
+    "accessibility"
   ],
   "dependencies": {
     "@eslint/js": "^10.0.1",
@@ -59,15 +61,32 @@
     "bumpp": "^12.3.0",
     "cross-spawn": "^7.0.6",
     "eslint": "^10.6.0",
+    "eslint-plugin-vue": "^10.9.2",
+    "eslint-plugin-vuejs-accessibility": "^2.5.0",
     "globals": "^17.7.0",
     "jiti": "^2.7.0",
     "lefthook": "^2.1.14",
     "publint": "^0.3.24",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vue-eslint-parser": "^10.4.1"
   },
   "peerDependencies": {
     "eslint": "^10.4.0",
-    "typescript": "^6.0.0"
+    "eslint-plugin-vue": "^10.9.2",
+    "eslint-plugin-vuejs-accessibility": "^2.5.0",
+    "typescript": "^6.0.0",
+    "vue-eslint-parser": "^10.4.1"
+  },
+  "peerDependenciesMeta": {
+    "eslint-plugin-vue": {
+      "optional": true
+    },
+    "eslint-plugin-vuejs-accessibility": {
+      "optional": true
+    },
+    "vue-eslint-parser": {
+      "optional": true
+    }
   },
   "allowScripts": {
     "lefthook@2.1.14": true,
