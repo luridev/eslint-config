@@ -1,6 +1,6 @@
 {
   "name": "@protoapps/eslint-config",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Opinionated ESLint flat config for JavaScript, TypeScript, Node, and optional Vue projects",
   "license": "MIT",
   "repository": "github:luridev/eslint-config",
