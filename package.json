@@ -62,6 +62,7 @@
     "@types/node": "^22.0.0",
     "@vitest/eslint-plugin": "^1.6.28",
     "bumpp": "^12.3.0",
+    "changelogithub": "^15.0.5",
     "cross-spawn": "^7.0.6",
     "eslint": "^10.6.0",
     "eslint-plugin-vue": "^10.9.2",
