@@ -9,7 +9,7 @@ const require = createRequire(import.meta.url);
 const packageRequire = createRequire(require.resolve('@protoapps/eslint-config'));
 const vuePeers = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
 
-for (const peer of vuePeers) {
+for (const peer of [...vuePeers, '@vitest/eslint-plugin']) {
   assert.throws(() => packageRequire.resolve(peer), { code: 'MODULE_NOT_FOUND' });
 }
 
@@ -26,9 +26,13 @@ assert.throws(() => createProtoConfig({
   return true;
 });
 
+assert.throws(() => createProtoConfig({ tsconfigRootDir: consumer, vitest: true }),
+  /Vitest.*@vitest\/eslint-plugin.*npm install/);
+
 const config = createProtoConfig({ tsconfigRootDir: consumer });
 assert.ok(Array.isArray(config), 'The factory must return a synchronous config array.');
 assert.ok(Array.isArray(createProtoConfig({ tsconfigRootDir: consumer, vue: false })));
+assert.ok(Array.isArray(createProtoConfig({ tsconfigRootDir: consumer, vitest: false })));
 
 const eslint = new ESLint({
   cwd: consumer,

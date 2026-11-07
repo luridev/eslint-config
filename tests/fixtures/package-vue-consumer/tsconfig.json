@@ -9,5 +9,5 @@
     "skipLibCheck": false,
     "types": []
   },
-  "include": ["contracts.ts", "*.vue"]
+  "include": ["contracts.ts", "*.vue", "src/**/*.ts"]
 }

@@ -9,6 +9,7 @@ import spawn from 'cross-spawn';
 const root = realpathSync(fileURLToPath(new URL('../../', import.meta.url)));
 const require = createRequire(import.meta.url);
 const vuePeers = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
+const vitestPeer = '@vitest/eslint-plugin';
 
 function run(command, args, cwd = root, capture = false) {
   const label = `${command} ${args.join(' ')}`;
@@ -53,7 +54,7 @@ try {
   const archive = join(temporaryRoot, filename);
   const packedFiles = new Set(files.map((file) => file.path));
 
-  for (const module of ['index', 'base', 'integrations/vue']) {
+  for (const module of ['index', 'base', 'integrations/vue', 'integrations/vitest']) {
     for (const extension of ['js', 'd.ts']) {
       const filename = `dist/${module}.${extension}`;
       assert.ok(packedFiles.has(filename), `The archive must contain ${filename}.`);
@@ -67,9 +68,17 @@ try {
   const typescriptVersion = JSON.parse(readFileSync(require.resolve('typescript/package.json'), 'utf8')).version;
   const npmCache = join(temporaryRoot, 'npm-cache');
 
-  const verifyConsumer = (fixture, plugins = [], scripts = ['runtime.mjs']) => {
-    const consumer = join(temporaryRoot, fixture);
+  const verifyConsumer = (fixture, plugins = [], scripts = ['runtime.mjs'], name = fixture) => {
+    const consumer = join(temporaryRoot, name);
     cpSync(join(root, 'tests/fixtures', fixture), consumer, { recursive: true });
+    const withVitest = plugins.some((name) => name.startsWith(`${vitestPeer}@`));
+
+    if (withVitest) {
+      cpSync(join(root, 'tests/fixtures/vitest-consumer/src'), join(consumer, 'src'), { recursive: true });
+      for (const script of scripts.filter((name) => name.startsWith('vitest-'))) {
+        cpSync(join(root, 'tests/fixtures/package-vitest-consumer', script), join(consumer, script));
+      }
+    }
     writeFileSync(join(consumer, 'package.json'), `${JSON.stringify({
       private: true,
       type: 'module',
@@ -84,13 +93,13 @@ try {
     const installedPackage = realpathSync(join(consumer, 'node_modules', manifest.name));
     assert.ok(installedPackage.startsWith(`${consumer}${sep}`), 'The package must be installed inside the consumer.');
 
-    if (plugins.length === 0) {
-      const lock = JSON.parse(readFileSync(join(consumer, 'package-lock.json'), 'utf8'));
+    const lock = JSON.parse(readFileSync(join(consumer, 'package-lock.json'), 'utf8'));
 
-      for (const peer of vuePeers) {
+    for (const peer of [...vuePeers, vitestPeer]) {
+      if (!plugins.some((name) => name.startsWith(`${peer}@`))) {
         assert.ok(
           !Object.keys(lock.packages).some((path) => path.endsWith(`node_modules/${peer}`)),
-          `The base-only installation must not contain ${peer}.`,
+          `The ${name} installation must not contain ${peer}.`,
         );
       }
     }
@@ -110,6 +119,11 @@ try {
     return `${name}@${version}`;
   });
   verifyConsumer('package-vue-consumer', plugins, ['runtime.mjs', 'disabled.mjs', 'broken-plugin.mjs']);
+  const vitestVersion = JSON.parse(readFileSync(require.resolve(`${vitestPeer}/package.json`), 'utf8')).version;
+  const vitestPlugin = `${vitestPeer}@${vitestVersion}`;
+  const vitestScripts = ['vitest-runtime.mjs', 'vitest-disabled.mjs', 'vitest-broken-plugin.mjs'];
+  verifyConsumer('package-vitest-consumer', [vitestPlugin], vitestScripts);
+  verifyConsumer('package-vue-consumer', [...plugins, vitestPlugin], ['vitest-runtime.mjs'], 'package-vue-vitest-consumer');
   process.stdout.write('Package verified successfully.\n');
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });

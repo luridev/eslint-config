@@ -1,6 +1,6 @@
 # @protoapps/eslint-config
 
-Opinionated ESLint flat config for JavaScript, TypeScript, and Vue.
+Opinionated ESLint flat config for JavaScript, TypeScript, Vue, and Vitest.
 
 ## Installation
 
@@ -36,6 +36,25 @@ export default createProtoConfig({
   vue: { version: '3.5.40' },
 });
 ```
+
+## Vitest
+
+Install the additional ESLint plugin:
+
+```sh
+npm install -D @vitest/eslint-plugin
+```
+
+Enable strict Vitest rules for `**/*.vitest.ts`:
+
+```ts
+export default createProtoConfig({
+  tsconfigRootDir: import.meta.dirname,
+  vitest: true,
+});
+```
+
+For other naming conventions, use `vitest: { files: ['src/**/*.test.ts'], ignores: ['src/node-tests/**'] }`.
 
 ## Customization
 

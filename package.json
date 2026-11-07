@@ -1,7 +1,7 @@
 {
   "name": "@protoapps/eslint-config",
   "version": "0.3.3",
-  "description": "Opinionated ESLint flat config for JavaScript, TypeScript, Node, and optional Vue projects",
+  "description": "Opinionated ESLint flat config for JavaScript, TypeScript, Node, and optional Vue and Vitest projects",
   "license": "MIT",
   "repository": "github:luridev/eslint-config",
   "homepage": "https://github.com/luridev/eslint-config#readme",
@@ -42,11 +42,13 @@
     "typescript",
     "stylistic",
     "vue",
-    "accessibility"
+    "accessibility",
+    "vitest"
   ],
   "dependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.63.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-package-json": "^1.0.0",
     "eslint-plugin-import-x": "^4.17.1",
@@ -58,6 +60,7 @@
     "@commitlint/config-conventional": "^21.2.4",
     "@commitlint/types": "^21.2.3",
     "@types/node": "^22.0.0",
+    "@vitest/eslint-plugin": "^1.6.28",
     "bumpp": "^12.3.0",
     "cross-spawn": "^7.0.6",
     "eslint": "^10.6.0",
@@ -71,6 +74,7 @@
     "vue-eslint-parser": "^10.4.1"
   },
   "peerDependencies": {
+    "@vitest/eslint-plugin": "^1.6.28",
     "eslint": "^10.4.0",
     "eslint-plugin-vue": "^10.9.2",
     "eslint-plugin-vuejs-accessibility": "^2.5.0",
@@ -78,6 +82,9 @@
     "vue-eslint-parser": "^10.4.1"
   },
   "peerDependenciesMeta": {
+    "@vitest/eslint-plugin": {
+      "optional": true
+    },
     "eslint-plugin-vue": {
       "optional": true
     },

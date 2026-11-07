@@ -1,4 +1,4 @@
-import { createProtoConfig, type VueConfigOptions } from '@protoapps/eslint-config';
+import { createProtoConfig, type VitestConfigOptions, type VueConfigOptions } from '@protoapps/eslint-config';
 
 const vue: VueConfigOptions = { version: '3.5.40' };
 
@@ -13,8 +13,13 @@ createProtoConfig({ tsconfigRootDir: '.', vue: true });
 // @ts-expect-error An enabled Vue integration must specify its version.
 createProtoConfig({ tsconfigRootDir: '.', vue: {} });
 
-// @ts-expect-error The public Vue options require a string version.
-const invalidVue: VueConfigOptions = { version: 3 };
+const vitest: VitestConfigOptions = { files: ['src/**/*.test.ts'], ignores: ['src/node-tests/**'] };
+createProtoConfig({ tsconfigRootDir: '.', vitest });
+createProtoConfig({ tsconfigRootDir: '.', vitest: true, vue });
+createProtoConfig({ tsconfigRootDir: '.', vitest: false });
+
+// @ts-expect-error Object options require explicit file patterns.
+createProtoConfig({ tsconfigRootDir: '.', vitest: {} });
 
 // @ts-expect-error Public declarations must not implicitly introduce Node globals.
 process.version;
