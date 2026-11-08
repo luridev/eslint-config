@@ -8,14 +8,15 @@ import { createProtoConfig } from '@protoapps/eslint-config';
 
 const consumer = fileURLToPath(new URL('.', import.meta.url));
 const withVue = existsSync(new URL('ExampleComponent.vue', import.meta.url));
-const config = createProtoConfig({
+const config = await createProtoConfig({
   tsconfigRootDir: consumer,
   vitest: true,
   vue: withVue ? { version: '3.5.40' } : false,
-}, {
+}, [[{
   files: ['**/*.vitest.ts'],
   plugins: { vitest },
-});
+  rules: { 'vitest/prefer-todo': 'off' },
+}]]);
 assert.ok(Array.isArray(config));
 
 if (!withVue) {
@@ -31,6 +32,7 @@ const filePath = fileURLToPath(new URL('src/sample.vitest.ts', import.meta.url))
 const effective = await eslint.calculateConfigForFile(filePath);
 assert.equal(effective.plugins.vitest, vitest);
 assert.equal(effective.rules['@typescript-eslint/unbound-method'][0], 0);
+assert.equal(effective.rules['vitest/prefer-todo'][0], 0, 'Final nested overrides must win over the preset.');
 const [result] = await eslint.lintText(`import { expect, it } from 'vitest';
 class Counter {
   value = 0;

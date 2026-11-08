@@ -13,7 +13,7 @@ const hooks = registerHooks({
 try {
   const { createProtoConfig } = await import('@protoapps/eslint-config');
   for (const vitest of [undefined, false]) {
-    assert.ok(Array.isArray(createProtoConfig({
+    assert.ok(Array.isArray(await createProtoConfig({
       tsconfigRootDir: fileURLToPath(new URL('.', import.meta.url)), vitest,
     })));
   }

@@ -18,6 +18,20 @@ export default createProtoConfig({
 });
 ```
 
+`createProtoConfig()` is asynchronous and returns a Promise of the config array.
+ESLint resolves the default export automatically. Await the factory when composing
+configs programmatically or passing the result to the ESLint API:
+
+```ts
+import { createProtoConfig } from '@protoapps/eslint-config';
+import { defineConfig } from 'eslint/config';
+
+export default defineConfig(
+  await createProtoConfig({ tsconfigRootDir: import.meta.dirname }),
+  { rules: { 'no-console': 'off' } },
+);
+```
+
 ## Vue
 
 Install the additional ESLint plugins:
@@ -79,5 +93,7 @@ Additional options for file patterns, import resolution, formatting exclusions, 
 ## Development
 
 ```sh
+npm run test:unit
+npm run test:package
 npm run check:commit
 ```

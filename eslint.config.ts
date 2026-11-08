@@ -8,8 +8,9 @@ const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(
   globalIgnores(['dist/**', 'tests/fixtures/**']),
-  ...createProtoConfig({
+  await createProtoConfig({
     tsconfigRootDir,
+    vitest: { files: ['tests/*.test.js'] },
   }),
   {
     name: 'repo/node',

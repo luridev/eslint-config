@@ -5,8 +5,8 @@ import { ESLint } from 'eslint';
 import { createProtoConfig } from '@protoapps/eslint-config';
 
 const consumer = fileURLToPath(new URL('.', import.meta.url));
-const config = createProtoConfig({ tsconfigRootDir: consumer, vue: { version: '3.5.40' } });
-assert.ok(Array.isArray(config), 'Enabling Vue must preserve the synchronous API.');
+const config = await createProtoConfig({ tsconfigRootDir: consumer, vue: { version: '3.5.40' } });
+assert.ok(Array.isArray(config), 'Enabling Vue must resolve to a config array.');
 
 const eslint = new ESLint({
   cwd: consumer,

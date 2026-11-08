@@ -21,8 +21,8 @@ const hooks = registerHooks({
 try {
   const { createProtoConfig } = await import('@protoapps/eslint-config');
   const tsconfigRootDir = fileURLToPath(new URL('.', import.meta.url));
-  assert.throws(() => createProtoConfig({ tsconfigRootDir, vitest: true }), { message, code: 'MODULE_NOT_FOUND' });
-  assert.ok(Array.isArray(createProtoConfig({ tsconfigRootDir, vitest: false })));
+  await assert.rejects(() => createProtoConfig({ tsconfigRootDir, vitest: true }), { message, code: 'MODULE_NOT_FOUND' });
+  assert.ok(Array.isArray(await createProtoConfig({ tsconfigRootDir, vitest: false })));
 } finally {
   hooks.deregister();
 }

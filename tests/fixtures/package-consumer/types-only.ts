@@ -1,6 +1,16 @@
 import { createProtoConfig, type VitestConfigOptions, type VueConfigOptions } from '@protoapps/eslint-config';
+import { defineConfig } from 'eslint/config';
 
 const vue: VueConfigOptions = { version: '3.5.40' };
+
+const pending: Promise<ReturnType<typeof defineConfig>> = createProtoConfig({ tsconfigRootDir: '.' });
+defineConfig(await pending);
+
+// @ts-expect-error Programmatic composition requires the resolved config array.
+defineConfig(pending);
+
+// @ts-expect-error A Promise cannot be spread before awaiting it.
+[...pending];
 
 export const vueConfig = createProtoConfig({
   tsconfigRootDir: '.',

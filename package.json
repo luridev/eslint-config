@@ -23,14 +23,16 @@
   },
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "check:commit": "npm run lint && npm run typecheck && npm run test:package",
+    "check:commit": "npm test && npm run lint && npm run typecheck",
     "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
     "lint": "eslint .",
+    "prepack": "npm run build",
     "prepublishOnly": "npm --dry-run=false run check:commit",
     "prerelease": "node --input-type=module -e \"import { checkGitStatus } from 'bumpp/cli'; await checkGitStatus()\"",
     "release": "npm run check:commit && bumpp",
-    "test": "npm run build && node --test",
-    "test:package": "node config/package/verifyPackage.js",
+    "test": "npm run test:unit && npm run test:package",
+    "test:package": "npm run build && jiti config/package/verifyPackage.ts",
+    "test:unit": "npm run build && vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "files": [
@@ -59,6 +61,7 @@
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@commitlint/types": "^21.2.3",
+    "@types/cross-spawn": "^6.0.6",
     "@types/node": "^22.0.0",
     "@vitest/eslint-plugin": "^1.6.28",
     "bumpp": "^12.3.0",
@@ -72,6 +75,7 @@
     "lefthook": "^2.1.14",
     "publint": "^0.3.24",
     "typescript": "^6.0.3",
+    "vitest": "^5.1.0",
     "vue-eslint-parser": "^10.4.1"
   },
   "peerDependencies": {

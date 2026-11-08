@@ -1,13 +1,9 @@
-import { createRequire } from 'node:module';
 import { defineConfig } from 'eslint/config';
 import { createProtoConfig as createBaseConfig } from './base.js';
 import type { ProtoConfigOptions as BaseProtoConfigOptions } from './base.js';
 import type { VitestConfigOptions } from './integrations/vitest.js';
-import type * as VitestIntegration from './integrations/vitest.js';
 import type { VueConfigOptions } from './integrations/vue.js';
-import type * as VueIntegration from './integrations/vue.js';
 
-const require = createRequire(import.meta.url);
 const vuePeerDependencies = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
 
 const isVueConfigOptions = (value: unknown): value is VueConfigOptions => (
@@ -29,7 +25,9 @@ const isVitestConfigOptions = (value: unknown): value is VitestConfigOptions => 
     && value.ignores.every((pattern: unknown) => typeof pattern === 'string' && pattern.trim().length > 0)))
 );
 
-const createConfigWithVue = ({ vue, ...options }: BaseProtoConfigOptions & { vue?: false | VueConfigOptions }) => {
+const createConfigWithVue = async (
+  { vue, ...options }: BaseProtoConfigOptions & { vue?: false | VueConfigOptions },
+) => {
   if (vue === undefined || vue === false) {
     return createBaseConfig(options);
   }
@@ -40,11 +38,11 @@ const createConfigWithVue = ({ vue, ...options }: BaseProtoConfigOptions & { vue
 
   const missing = vuePeerDependencies.filter((name) => {
     try {
-      require.resolve(name);
+      import.meta.resolve(name);
 
       return false;
     } catch (error) {
-      if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') {
+      if (error instanceof Error && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND') {
         return true;
       }
 
@@ -61,7 +59,7 @@ const createConfigWithVue = ({ vue, ...options }: BaseProtoConfigOptions & { vue
 
   // Load the private ESM graph lazily, preserving the plugins' ESM identities.
   // Errors inside installed plugins must retain their original diagnostics.
-  const { createVueConfig } = require('./integrations/vue.js') as typeof VueIntegration;
+  const { createVueConfig } = await import('./integrations/vue.js');
 
   return createVueConfig({ ...options, vue });
 };
@@ -74,12 +72,12 @@ export type ProtoConfigOptions = BaseProtoConfigOptions & {
   vitest?: boolean | VitestConfigOptions;
 };
 
-export const createProtoConfig = (
+export const createProtoConfig = async (
   { vitest, ...options }: ProtoConfigOptions,
   ...overrides: Parameters<typeof defineConfig>
-): ReturnType<typeof defineConfig> => {
+): Promise<ReturnType<typeof defineConfig>> => {
   if (vitest === undefined || vitest === false) {
-    return defineConfig(createConfigWithVue(options), ...overrides);
+    return defineConfig(await createConfigWithVue(options), ...overrides);
   }
 
   const vitestOptions = vitest === true ? { files: ['**/*.vitest.ts'] } : vitest;
@@ -91,9 +89,9 @@ export const createProtoConfig = (
   }
 
   try {
-    require.resolve('@vitest/eslint-plugin');
+    import.meta.resolve('@vitest/eslint-plugin');
   } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') {
+    if (error instanceof Error && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND') {
       throw new Error(
         '@protoapps/eslint-config: Vitest requires the missing optional peer dependency @vitest/eslint-plugin. '
         + 'Install it with: npm install --save-dev @vitest/eslint-plugin',
@@ -105,7 +103,8 @@ export const createProtoConfig = (
   }
 
   // Keep the ESM plugin identity and propagate errors from installed dependencies.
-  const { createVitestConfig } = require('./integrations/vitest.js') as typeof VitestIntegration;
+  const configWithVue = await createConfigWithVue(options);
+  const { createVitestConfig } = await import('./integrations/vitest.js');
 
-  return defineConfig(createConfigWithVue(options), createVitestConfig(vitestOptions), ...overrides);
+  return defineConfig(configWithVue, createVitestConfig(vitestOptions), ...overrides);
 };

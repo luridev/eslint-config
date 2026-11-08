@@ -14,13 +14,18 @@
     "forceConsistentCasingInFileNames": true,
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "#package/*": ["./config/package/*"]
+    }
   },
   "include": [
     "src/**/*.ts",
+    "config/**/*.ts",
     "eslint.config.ts",
     "commitlint.config.ts",
     "bump.config.ts",
-    "changelogithub.config.ts"
+    "changelogithub.config.ts",
+    "vitest.config.ts"
   ]
 }

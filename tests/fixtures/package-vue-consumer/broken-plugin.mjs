@@ -21,7 +21,7 @@ const hooks = registerHooks({
 
 try {
   const { createProtoConfig } = await import('@protoapps/eslint-config');
-  assert.throws(() => createProtoConfig({
+  await assert.rejects(() => createProtoConfig({
     tsconfigRootDir: fileURLToPath(new URL('.', import.meta.url)),
     vue: { version: '3.5.40' },
   }), { message, code: 'MODULE_NOT_FOUND' });

@@ -11,6 +11,6 @@ const options: ProtoConfigOptions = {
   }]],
 };
 
-export const config = createProtoConfig(options,
+export const config = await createProtoConfig(options,
   { files: ['**/*.vue'], extends: [[{ rules: { 'vue/html-self-closing': 'off' } }]] },
   [[{ files: ['**/*.vue'], rules: { 'no-alert': 'off' } }]]);

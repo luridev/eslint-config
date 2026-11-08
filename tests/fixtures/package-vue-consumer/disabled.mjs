@@ -16,7 +16,7 @@ try {
   const consumer = fileURLToPath(new URL('.', import.meta.url));
 
   for (const options of [{ tsconfigRootDir: consumer }, { tsconfigRootDir: consumer, vue: false }]) {
-    const config = createProtoConfig(options);
+    const config = await createProtoConfig(options);
     assert.ok(Array.isArray(config));
   }
 } finally {

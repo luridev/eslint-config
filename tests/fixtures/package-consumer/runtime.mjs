@@ -13,7 +13,7 @@ for (const peer of [...vuePeers, '@vitest/eslint-plugin']) {
   assert.throws(() => packageRequire.resolve(peer), { code: 'MODULE_NOT_FOUND' });
 }
 
-assert.throws(() => createProtoConfig({
+await assert.rejects(() => createProtoConfig({
   tsconfigRootDir: consumer,
   vue: { version: '3.5.40' },
 }), (error) => {
@@ -26,13 +26,15 @@ assert.throws(() => createProtoConfig({
   return true;
 });
 
-assert.throws(() => createProtoConfig({ tsconfigRootDir: consumer, vitest: true }),
+await assert.rejects(() => createProtoConfig({ tsconfigRootDir: consumer, vitest: true }),
   /Vitest.*@vitest\/eslint-plugin.*npm install/);
 
-const config = createProtoConfig({ tsconfigRootDir: consumer });
-assert.ok(Array.isArray(config), 'The factory must return a synchronous config array.');
-assert.ok(Array.isArray(createProtoConfig({ tsconfigRootDir: consumer, vue: false })));
-assert.ok(Array.isArray(createProtoConfig({ tsconfigRootDir: consumer, vitest: false })));
+const pending = createProtoConfig({ tsconfigRootDir: consumer });
+assert.ok(pending instanceof Promise, 'The factory must return a Promise.');
+const config = await pending;
+assert.ok(Array.isArray(config), 'The factory must resolve to a config array.');
+assert.ok(Array.isArray(await createProtoConfig({ tsconfigRootDir: consumer, vue: false })));
+assert.ok(Array.isArray(await createProtoConfig({ tsconfigRootDir: consumer, vitest: false })));
 
 const eslint = new ESLint({
   cwd: consumer,
