@@ -16,20 +16,14 @@
       "node"
     ],
     "paths": {
-      "#package/*": ["./config/package/*"],
       "#tests/*": ["./tests/*"],
       "@protoapps/eslint-config": ["./src/index.ts"]
     }
   },
   "include": [
     "src/**/*.ts",
-    "config/**/*.ts",
     "scripts/**/*.ts",
     "tests/*.ts",
-    "eslint.config.ts",
-    "commitlint.config.ts",
-    "bump.config.ts",
-    "changelogithub.config.ts",
-    "vitest.config.ts"
+    "*.config.ts"
   ]
 }

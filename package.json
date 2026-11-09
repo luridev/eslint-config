@@ -24,14 +24,14 @@
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "check:commit": "npm test && npm run lint && npm run typecheck",
-    "clean": "jiti scripts/clean.ts",
+    "clean": "rimraf dist",
     "lint": "eslint .",
     "prepack": "npm run build",
     "prepublishOnly": "npm --dry-run=false run check:commit",
-    "prerelease": "jiti scripts/check-release.ts",
+    "prerelease": "jiti scripts/checkRelease.ts",
     "release": "npm run check:commit && bumpp",
     "test": "npm run test:unit && npm run test:package",
-    "test:package": "npm run build && jiti config/package/verifyPackage.ts",
+    "test:package": "npm run build && jiti scripts/verifyPackage.ts",
     "test:unit": "npm run build && vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
@@ -74,6 +74,7 @@
     "jiti": "^2.7.0",
     "lefthook": "^2.1.14",
     "publint": "^0.3.24",
+    "rimraf": "^6.1.4",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0",
     "vue-eslint-parser": "^10.4.1"

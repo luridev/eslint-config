@@ -5,9 +5,25 @@ import { tmpdir } from 'node:os';
 import { basename, join, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import spawn from 'cross-spawn';
-import type { NpmPackResult, NpmRunResult, PackageLock, PackageManifest } from '#package/types.js';
+import type { SpawnSyncReturns } from 'node:child_process';
 
-const root = realpathSync(fileURLToPath(new URL('../../', import.meta.url)));
+type NpmRunResult = SpawnSyncReturns<string | null>;
+
+type NpmPackResult = {
+  filename: string;
+  files: Array<{ path: string }>;
+};
+
+type PackageManifest = {
+  name: string;
+  version: string;
+};
+
+type PackageLock = {
+  packages: Record<string, unknown>;
+};
+
+const root = realpathSync(fileURLToPath(new URL('../', import.meta.url)));
 const require = createRequire(import.meta.url);
 const vuePeers = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
 const vitestPeer = '@vitest/eslint-plugin';
