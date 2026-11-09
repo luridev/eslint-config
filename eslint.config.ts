@@ -10,7 +10,7 @@ export default defineConfig(
   globalIgnores(['dist/**', 'tests/fixtures/**']),
   await createProtoConfig({
     tsconfigRootDir,
-    vitest: { files: ['tests/*.test.js'] },
+    vitest: { files: ['tests/*.test.ts'] },
   }),
   {
     name: 'repo/node',

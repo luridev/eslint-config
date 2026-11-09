@@ -24,11 +24,11 @@
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
     "check:commit": "npm test && npm run lint && npm run typecheck",
-    "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
+    "clean": "jiti scripts/clean.ts",
     "lint": "eslint .",
     "prepack": "npm run build",
     "prepublishOnly": "npm --dry-run=false run check:commit",
-    "prerelease": "node --input-type=module -e \"import { checkGitStatus } from 'bumpp/cli'; await checkGitStatus()\"",
+    "prerelease": "jiti scripts/check-release.ts",
     "release": "npm run check:commit && bumpp",
     "test": "npm run test:unit && npm run test:package",
     "test:package": "npm run build && jiti config/package/verifyPackage.ts",
