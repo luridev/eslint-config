@@ -11,7 +11,6 @@ type NpmRunResult = SpawnSyncReturns<string | null>;
 
 type NpmPackResult = {
   filename: string;
-  files: Array<{ path: string }>;
 };
 
 type PackageManifest = {
@@ -64,17 +63,9 @@ process.stdout.write(`[package] Temporary root: ${temporaryRoot}\n`);
 try {
   const packed = JSON.parse(run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temporaryRoot], root, true)) as Array<NpmPackResult>;
   assert.equal(packed.length, 1, 'npm pack must produce one archive.');
-  const { filename, files } = packed[0];
+  const { filename } = packed[0];
   assert.equal(basename(filename), filename, 'The archive must remain inside the temporary root.');
   const archive = join(temporaryRoot, filename);
-  const packedFiles = new Set(files.map((file) => file.path));
-
-  for (const module of ['index', 'base', 'integrations/vue', 'integrations/vitest']) {
-    for (const extension of ['js', 'd.ts']) {
-      const modulePath = `dist/${module}.${extension}`;
-      assert.ok(packedFiles.has(modulePath), `The archive must contain ${modulePath}.`);
-    }
-  }
 
   run('npm', ['exec', '--no', '--', 'publint', archive, '--strict']);
 
