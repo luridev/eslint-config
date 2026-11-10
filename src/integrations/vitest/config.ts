@@ -6,7 +6,7 @@ export const vitestIgnores = ['**/*.pwtest.*', '**/playwright/**', '**/*.test-d.
 export const vitestRules: Linter.RulesRecord = {
   'vitest/consistent-test-it': ['error', { fn: 'it', withinDescribe: 'it' }],
   'vitest/consistent-vitest-vi': ['error', { fn: 'vi' }],
-  'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'assert'] }],
+  'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'assert', 'expect*'] }],
   'vitest/hoisted-apis-on-top': 'error',
   'vitest/max-nested-describe': ['error', { max: 3 }],
   'vitest/no-alias-methods': 'error',

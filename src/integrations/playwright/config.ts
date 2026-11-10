@@ -4,7 +4,10 @@ export const defaultPlaywrightFiles = ['**/*.pwtest.ts'];
 export const playwrightIgnores = ['**/*.vitest.*', '**/*.test-d.*'];
 
 export const playwrightRules: Linter.RulesRecord = {
-  'playwright/expect-expect': ['error', { assertFunctionNames: ['expect', 'assert'] }],
+  'playwright/expect-expect': ['error', {
+    assertFunctionNames: ['expect', 'assert'],
+    assertFunctionPatterns: ['^expect[A-Z]'],
+  }],
   'playwright/max-nested-describe': ['error', { max: 3 }],
   'playwright/missing-playwright-await': ['error', {
     includePageLocatorMethods: false,

@@ -27,6 +27,26 @@ const createEslint = async (options: TestConfigOptions = {}): Promise<TestESLint
 const hasRule = (messages: Array<Linter.LintMessage>, rule: string) => messages.some(({ ruleId }) => ruleId === rule);
 
 describe('Vitest integration', () => {
+  it('recognizes assertion helpers and rejects tests without assertions', async () => {
+    const eslint = await createEslint({ vitest: { files: ['**/*.js'] } });
+
+    for (const [body, hasAssertion] of [
+      ['expect(1).toBe(1);', true],
+      ['expectSomething();', true],
+      ['initializeApp();', false],
+    ] as const) {
+      const [result] = await eslint.lintText(`import { describe, expect, it } from 'vitest';
+describe('assertions', () => {
+  it('runs a scenario', () => { ${body} });
+});
+`, { filePath: join(consumerRoot, 'src/example.js') });
+
+      assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
+      const errors = result.messages.filter(({ ruleId }) => ruleId === 'vitest/expect-expect');
+      assert.deepEqual(errors.map(({ severity }) => severity), hasAssertion ? [] : [2], body);
+    }
+  });
+
   it('allows equality and truthiness matchers while rejecting TODO tests', async () => {
     const eslint = await createEslint({ vitest: { files: ['**/*.js'] } });
     const filePath = join(consumerRoot, 'src/example.js');

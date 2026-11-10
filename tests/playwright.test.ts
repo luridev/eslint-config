@@ -33,6 +33,21 @@ const lint = async (
 const hasRule = (messages: Array<Linter.LintMessage>, rule: string) => messages.some(({ ruleId }) => ruleId === rule);
 
 describe('Playwright integration', () => {
+  it('recognizes assertion helpers and rejects tests without assertions', async () => {
+    for (const [body, hasAssertion] of [
+      ['expect(1).toBe(1);', true],
+      ['expectSomething();', true],
+      ['initializeApp();', false],
+    ] as const) {
+      const messages = await lint(`test.describe('assertions', () => {
+  test('runs a scenario', () => { ${body} });
+});`);
+
+      const errors = messages.filter(({ ruleId }) => ruleId === 'playwright/expect-expect');
+      assert.deepEqual(errors.map(({ severity }) => severity), hasAssertion ? [] : [2], body);
+    }
+  });
+
   it('validates object file patterns and ignores', async () => {
     for (const playwright of [null, 1, 'true', {}, { files: [] }, { files: [''] }, { files: ['  '] }, { files: [1] },
       { files: '**/*.ts' }, { files: ['**/*.ts'], ignores: 'src/**' }, { files: ['**/*.ts'], ignores: [null] },
