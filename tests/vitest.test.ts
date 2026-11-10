@@ -27,6 +27,26 @@ const createEslint = async (options: TestConfigOptions = {}): Promise<TestESLint
 const hasRule = (messages: Array<Linter.LintMessage>, rule: string) => messages.some(({ ruleId }) => ruleId === rule);
 
 describe('Vitest integration', () => {
+  it('allows equality and truthiness matchers while rejecting TODO tests', async () => {
+    const eslint = await createEslint({ vitest: { files: ['**/*.js'] } });
+    const filePath = join(consumerRoot, 'src/example.js');
+
+    const [matchers] = await eslint.lintText(`import { describe, expect, it } from 'vitest';
+
+describe('values', () => {
+  it('compares values', () => {
+    expect({ value: 1 }).toEqual({ value: 1 });
+    expect('value').toBeTruthy();
+  });
+});
+`, { filePath });
+
+    assert.equal(matchers.errorCount + matchers.warningCount, 0, JSON.stringify(matchers.messages));
+    const [todo] = await eslint.lintText('import { test } from \'vitest\';\n\ntest.todo(\'unfinished\');\n', { filePath });
+    assert.equal(todo.fatalErrorCount, 0, JSON.stringify(todo.messages));
+    assert.ok(todo.messages.some(({ ruleId, severity }) => ruleId === 'vitest/warn-todo' && severity === 2));
+  });
+
   it('Vitest options validate non-empty file patterns and optional ignores', async () => {
     for (const vitest of [null, 1, 'true', {}, { files: [] }, { files: [''] }, { files: [1] },
       { files: '**/*.ts' }, { files: ['**/*.ts'], ignores: 'src/**' }, { files: ['**/*.ts'], ignores: [null] }]) {

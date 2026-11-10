@@ -15,7 +15,7 @@ const config = await createProtoConfig({
 }, [[{
   files: ['**/*.vitest.ts'],
   plugins: { vitest },
-  rules: { 'vitest/prefer-todo': 'off' },
+  rules: { 'vitest/warn-todo': 'off' },
 }]]);
 assert.ok(Array.isArray(config));
 
@@ -32,7 +32,7 @@ const filePath = fileURLToPath(new URL('src/sample.vitest.ts', import.meta.url))
 const effective = await eslint.calculateConfigForFile(filePath);
 assert.equal(effective.plugins.vitest, vitest);
 assert.equal(effective.rules['@typescript-eslint/unbound-method'][0], 0);
-assert.equal(effective.rules['vitest/prefer-todo'][0], 0, 'Final nested overrides must win over the preset.');
+assert.equal(effective.rules['vitest/warn-todo'][0], 0, 'Final nested overrides must win over the preset.');
 const [result] = await eslint.lintText(`import { expect, it } from 'vitest';
 class Counter {
   value = 0;
@@ -49,7 +49,7 @@ it.only('focused', () => {
 `, { filePath });
 assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
 for (const rule of ['vitest/no-focused-tests', 'vitest/require-top-level-describe',
-  'vitest/prefer-called-once', 'vitest/prefer-strict-equal', 'vitest/unbound-method',
+  'vitest/prefer-called-once', 'vitest/unbound-method',
   '@typescript-eslint/no-floating-promises']) {
   assert.ok(result.messages.some(({ ruleId }) => ruleId === rule), `${rule}: ${JSON.stringify(result.messages)}`);
 }

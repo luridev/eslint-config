@@ -28,12 +28,6 @@ export const vitestRules: Linter.RulesRecord = {
   'vitest/prefer-comparison-matcher': 'error',
   'vitest/prefer-each': 'error',
   'vitest/prefer-equality-matcher': 'error',
-  'vitest/prefer-expect-assertions': ['error', {
-    onlyFunctionsWithExpectInLoop: true,
-    onlyFunctionsWithExpectInCallback: true,
-    disallowHasAssertions: false,
-  }],
-  'vitest/prefer-expect-resolves': 'error',
   'vitest/prefer-expect-type-of': 'error',
   'vitest/prefer-hooks-in-order': 'error',
   'vitest/prefer-hooks-on-top': 'error',
@@ -41,14 +35,11 @@ export const vitestRules: Linter.RulesRecord = {
   'vitest/prefer-importing-vitest-globals': 'error',
   'vitest/prefer-snapshot-hint': ['error', 'multi'],
   'vitest/prefer-spy-on': 'error',
-  'vitest/prefer-strict-boolean-matchers': 'error',
-  'vitest/prefer-strict-equal': 'error',
   'vitest/prefer-to-be-object': 'error',
   'vitest/prefer-to-be': 'error',
   'vitest/prefer-to-contain': 'error',
   'vitest/prefer-to-have-been-called-times': 'error',
   'vitest/prefer-to-have-length': 'error',
-  'vitest/prefer-todo': 'error',
   'vitest/prefer-vi-mocked': 'error',
   'vitest/require-hook': 'error',
   'vitest/require-local-test-context-for-concurrent-snapshots': 'error',
@@ -58,6 +49,7 @@ export const vitestRules: Linter.RulesRecord = {
   'vitest/valid-expect-in-promise': 'error',
   'vitest/valid-expect': ['error', { alwaysAwait: false, minArgs: 1, maxArgs: 2 }],
   'vitest/valid-title': 'error',
+  'vitest/warn-todo': 'error',
 };
 
 export const vitestTypescriptRules: Linter.RulesRecord = {
