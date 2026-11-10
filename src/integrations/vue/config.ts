@@ -1,15 +1,10 @@
-import { defineConfig } from 'eslint/config';
-import vuePlugin from 'eslint-plugin-vue';
-import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
-import tseslint from 'typescript-eslint';
-import vueParser from 'vue-eslint-parser';
-import { createProtoConfig as createBaseConfig } from '../base.js';
 import type { Linter } from 'eslint';
-import type { ProtoConfigOptions as BaseProtoConfigOptions } from '../base.js';
 
-const vueFiles = ['**/*.vue'];
+export const vuePeerDependencies = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
 
-const vueStylisticRules: Linter.RulesRecord = {
+export const vueFiles = ['**/*.vue'];
+
+export const vueStylisticRules: Linter.RulesRecord = {
   'vue/block-tag-newline': ['error', { singleline: 'always', multiline: 'always', maxEmptyLines: 0 }],
   'vue/html-indent': [
     'error',
@@ -57,7 +52,7 @@ const vueStylisticRules: Linter.RulesRecord = {
   'vue/template-curly-spacing': ['error', 'never'],
 };
 
-const vueRules: Linter.RulesRecord = {
+export const vueRules: Linter.RulesRecord = {
   'vue/attributes-order': ['error', { order: ['DEFINITION', 'LIST_RENDERING', 'CONDITIONALS', 'RENDER_MODIFIERS', 'GLOBAL', ['UNIQUE', 'SLOT'], 'TWO_WAY_BINDING', 'OTHER_DIRECTIVES', 'OTHER_ATTR', 'EVENTS', 'CONTENT'], alphabetical: false }],
   'vue/block-lang': ['error', { script: { lang: 'ts' } }],
   'vue/block-order': ['error', { order: ['script', 'template', 'style'] }],
@@ -94,83 +89,15 @@ const vueRules: Linter.RulesRecord = {
   'vue/v-on-handler-style': 'error',
 };
 
-export type VueConfigOptions = {
-  version: string;
-};
-
-export const createVueConfig = (
-  {
-    vue,
-    additionalCodeFiles = [],
-    additionalTypedFiles = [],
-    additionalResolverExtensions = [],
-    additionalStylisticFiles = [],
-    languageConfigs = [],
-    stylisticIgnores = [],
-    ...options
-  }: BaseProtoConfigOptions & { vue: VueConfigOptions },
-  ...overrides: Parameters<typeof defineConfig>
-): ReturnType<typeof defineConfig> => {
-  const { tsconfigRootDir } = options;
-
-  const vueLanguageConfigs = defineConfig(
+export const vueAccessibilityRules: Linter.RulesRecord = {
+  'vuejs-accessibility/label-has-for': [
+    'error',
     {
-      name: 'proto/vue',
-
-      files: vueFiles,
-
-      extends: [vuePlugin.configs['flat/recommended-error'], vueAccessibility.configs['flat/recommended']],
-
-      languageOptions: {
-        parser: vueParser,
-        parserOptions: {
-          parser: tseslint.parser,
-          projectService: true,
-          tsconfigRootDir,
-          extraFileExtensions: ['.vue'],
-        },
+      required: {
+        some: ['nesting', 'id'],
       },
     },
-  );
-
-  return defineConfig(
-    createBaseConfig({
-      ...options,
-      additionalCodeFiles: [...vueFiles, ...additionalCodeFiles],
-      additionalTypedFiles: [...vueFiles, ...additionalTypedFiles],
-      additionalResolverExtensions: ['.vue', ...additionalResolverExtensions],
-      additionalStylisticFiles: [...vueFiles, ...additionalStylisticFiles],
-      languageConfigs: [...vueLanguageConfigs, ...languageConfigs],
-      stylisticIgnores,
-    }),
-    {
-      name: 'proto/vue-rules',
-
-      files: vueFiles,
-
-      rules: {
-        ...vueRules,
-        'vue/no-unsupported-features': ['error', { version: vue.version }],
-        'vuejs-accessibility/label-has-for': [
-          'error',
-          {
-            required: {
-              some: ['nesting', 'id'],
-            },
-          },
-        ],
-        'vuejs-accessibility/no-aria-hidden-on-focusable': 'error',
-        'vuejs-accessibility/no-role-presentation-on-focusable': 'error',
-      },
-    },
-    {
-      name: 'proto/vue-stylistic',
-
-      files: vueFiles,
-      ignores: stylisticIgnores,
-
-      rules: vueStylisticRules,
-    },
-    ...overrides,
-  );
+  ],
+  'vuejs-accessibility/no-aria-hidden-on-focusable': 'error',
+  'vuejs-accessibility/no-role-presentation-on-focusable': 'error',
 };

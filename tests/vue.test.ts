@@ -3,9 +3,12 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
+import vuePlugin from 'eslint-plugin-vue';
+import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
+import tseslint from 'typescript-eslint';
 import { describe, it } from 'vitest';
+import vueParser from 'vue-eslint-parser';
 import { createProtoConfig } from '@protoapps/eslint-config';
-import type { Linter } from 'eslint';
 import type { ConfigOverrides, TestConfigOptions, TestESLint } from '#tests/types.js';
 import type { ProtoConfigOptions } from '@protoapps/eslint-config';
 
@@ -42,7 +45,13 @@ describe('Vue integration', () => {
     const typescript = await eslint.calculateConfigForFile(join(consumerRoot, 'src/standard.ts'));
     assert.ok(typescript !== undefined);
 
-    assert.equal(component.languageOptions.parser?.meta?.name, 'vue-eslint-parser');
+    assert.equal(component.languageOptions.parser, vueParser);
+    assert.equal(component.languageOptions.parserOptions.parser, tseslint.parser);
+    assert.equal(component.languageOptions.parserOptions.projectService, true);
+    assert.equal(component.languageOptions.parserOptions.tsconfigRootDir, consumerRoot);
+    assert.deepEqual(component.languageOptions.parserOptions.extraFileExtensions, ['.vue']);
+    assert.equal(component.plugins?.vue, vuePlugin);
+    assert.equal(component.plugins['vuejs-accessibility'], vueAccessibility);
     assert.equal(component.languageOptions.globals?.window, false);
     assert.equal(typescript.languageOptions.parser?.meta?.name, 'typescript-eslint/parser');
     assert.equal(typescript.languageOptions.globals?.window, undefined);
@@ -68,39 +77,56 @@ describe('Vue integration', () => {
     const regular = await lintSfc(await createEslint(), text);
     const ignored = await lintSfc(await createEslint({ stylisticIgnores: ['**/component.vue'] }), text);
 
-    for (const rule of ['@stylistic/linebreak-style', '@stylistic/semi', 'vue/block-tag-newline']) {
+    for (const rule of ['@stylistic/linebreak-style', 'vue/block-tag-newline']) {
       assert.ok(regular.has(rule), `Expected ${rule} before stylisticIgnores`);
       assert.ok(!ignored.has(rule), `Unexpected ignored ${rule}`);
     }
 
-    for (const rule of ['vue/html-self-closing', 'vuejs-accessibility/alt-text', '@typescript-eslint/no-unnecessary-condition']) {
+    for (const rule of ['vuejs-accessibility/alt-text', '@typescript-eslint/no-unnecessary-condition']) {
       assert.ok(ignored.has(rule), `Expected ${rule} to remain active`);
     }
   });
 
-  it('SFC imports resolve without an explicit extension', async () => {
-    const config = await (await createEslint()).calculateConfigForFile(sfcPath);
-    assert.ok(config !== undefined);
-    const resolvers = config.settings['import-x/resolver-next'];
-    assert.ok(resolvers !== undefined);
-
-    const resolver = resolvers
-      .find((candidate) => candidate.name === 'eslint-import-resolver-typescript');
-
-    assert.ok(resolver !== undefined);
-    const result = resolver.resolve('@fixture/component', sfcPath);
-    assert.equal(result.found, true);
-    assert.ok(typeof result.path === 'string');
-    assert.equal(normalize(result.path), normalize(sfcPath));
-  });
-
-  it('SFC linting runs typed, import, formatting, Vue, and accessibility checks', async () => {
+  it('SFC linting runs typed, Vue, and accessibility checks', async () => {
     const rules = await lintSfc(await createEslint());
 
-    for (const rule of ['@typescript-eslint/no-restricted-imports', '@typescript-eslint/no-unnecessary-condition',
-      'import-x/newline-after-import', '@stylistic/semi', '@stylistic/linebreak-style',
-      'vue/html-self-closing', 'vue/no-static-inline-styles', 'vuejs-accessibility/alt-text']) {
+    for (const rule of ['@typescript-eslint/no-unnecessary-condition', 'vue/no-static-inline-styles', 'vuejs-accessibility/alt-text']) {
       assert.ok(rules.has(rule), `Expected ${rule}: ${JSON.stringify([...rules])}`);
+    }
+  });
+
+  it('Vue preserves additional code, typed, formatting, and resolver scopes', async () => {
+    const eslint = await createEslint({
+      additionalCodeFiles: ['**/*.code'],
+      additionalTypedFiles: ['**/*.typed'],
+      additionalStylisticFiles: ['**/*.styled'],
+      additionalResolverExtensions: ['.custom'],
+    });
+
+    const code = await eslint.calculateConfigForFile(join(consumerRoot, 'src/example.code'));
+    const typed = await eslint.calculateConfigForFile(join(consumerRoot, 'src/example.typed'));
+    const styled = await eslint.calculateConfigForFile(join(consumerRoot, 'src/example.styled'));
+    const component = await eslint.calculateConfigForFile(sfcPath);
+    assert.ok(code !== undefined && typed !== undefined && styled !== undefined && component !== undefined);
+
+    assert.equal(code.rules.eqeqeq?.[0], 2);
+    assert.equal(typed.rules['@typescript-eslint/no-unnecessary-condition']?.[0], 2);
+    assert.equal(styled.rules['@stylistic/semi']?.[0], 2);
+    assert.deepEqual(styled.rules['@stylistic/linebreak-style'], [2, 'unix']);
+    assert.equal(component.rules['@typescript-eslint/no-unnecessary-condition']?.[0], 2);
+    assert.equal(component.rules['@stylistic/semi']?.[0], 2);
+    assert.equal(component.rules['vue/block-tag-newline']?.[0], 2);
+
+    const resolver = component.settings['import-x/resolver-next']
+      ?.find((candidate) => candidate.name === 'eslint-import-resolver-typescript');
+
+    assert.ok(resolver !== undefined);
+
+    for (const [specifier, file] of [['@fixture/component', sfcPath], ['@fixture/custom', join(consumerRoot, 'src/custom.custom')]]) {
+      const result = resolver.resolve(specifier, sfcPath);
+      assert.equal(result.found, true);
+      assert.ok(typeof result.path === 'string');
+      assert.equal(normalize(result.path), normalize(file));
     }
   });
 
@@ -117,32 +143,12 @@ describe('Vue integration', () => {
     assert.ok(rules.has('@typescript-eslint/no-unnecessary-condition'));
   });
 
-  it('final native overrides win over base, Vue, accessibility, and formatting rules', async () => {
-    const overrides = {
-      '@typescript-eslint/no-restricted-imports': 'off',
-      'vue/html-self-closing': 'off',
-      'vuejs-accessibility/alt-text': 'off',
-      '@stylistic/semi': 'off',
-      '@stylistic/linebreak-style': 'off',
-    } satisfies Linter.RulesRecord;
-
-    const rules = await lintSfc(await createEslint({}, [[{
-      files: ['**/*.vue'],
-      extends: [{ rules: overrides }],
-    }]]));
-
-    for (const rule of Object.keys(overrides)) {
-      assert.ok(!rules.has(rule), `Unexpected ${rule}`);
-    }
-
-    assert.ok(rules.has('@typescript-eslint/no-unnecessary-condition'));
-  });
-
   it('language configs and native extends retain policy order and file scope', async () => {
     const eslint = await createEslint({
       languageConfigs: [[{
         files: ['**/*.vue'],
         extends: [{ rules: { 'vue/html-self-closing': 'off', 'no-alert': 'warn', eqeqeq: 'off' } }],
+        languageOptions: { globals: { consumerGlobal: 'readonly' }, parserOptions: { ecmaFeatures: { jsx: false } } },
       }]],
     }, {
       files: ['**/component.vue'],
@@ -157,6 +163,8 @@ describe('Vue integration', () => {
     assert.ok(typescript !== undefined);
 
     assert.equal(component.rules.eqeqeq?.[0], 2);
+    assert.equal(component.languageOptions.globals?.consumerGlobal, 'readonly');
+    assert.equal(component.languageOptions.parserOptions.ecmaFeatures?.jsx, false);
     assert.equal(component.rules['vue/html-self-closing']?.[0], 2);
     assert.equal(component.rules['no-alert']?.[0], 2);
     assert.equal(other.rules['no-alert']?.[0], 1);

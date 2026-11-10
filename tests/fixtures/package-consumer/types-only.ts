@@ -1,4 +1,4 @@
-import { createProtoConfig, type VitestConfigOptions, type VueConfigOptions } from '@protoapps/eslint-config';
+import { createProtoConfig, type PlaywrightConfigOptions, type VitestConfigOptions, type VueConfigOptions } from '@protoapps/eslint-config';
 import { defineConfig } from 'eslint/config';
 
 const vue: VueConfigOptions = { version: '3.5.40' };
@@ -33,3 +33,17 @@ createProtoConfig({ tsconfigRootDir: '.', vitest: {} });
 
 // @ts-expect-error Public declarations must not implicitly introduce Node globals.
 process.version;
+
+const playwright: PlaywrightConfigOptions = { files: ['tests/**/*.pwtest.ts'], ignores: ['tests/gallery/**'] };
+createProtoConfig({ tsconfigRootDir: '.', playwright });
+createProtoConfig({ tsconfigRootDir: '.', playwright: true, vitest: true, vue });
+createProtoConfig({ tsconfigRootDir: '.', playwright: false });
+
+// @ts-expect-error Object options require explicit file patterns.
+createProtoConfig({ tsconfigRootDir: '.', playwright: {} });
+
+// @ts-expect-error File patterns must be an array.
+createProtoConfig({ tsconfigRootDir: '.', playwright: { files: '**/*.ts' } });
+
+// @ts-expect-error Ignore patterns must be strings.
+createProtoConfig({ tsconfigRootDir: '.', playwright: { files: ['**/*.ts'], ignores: [false] } });

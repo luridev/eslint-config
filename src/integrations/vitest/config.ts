@@ -1,8 +1,9 @@
-import vitest from '@vitest/eslint-plugin';
-import { defineConfig } from 'eslint/config';
 import type { Linter } from 'eslint';
 
-const vitestRules: Linter.RulesRecord = {
+export const defaultVitestFiles = ['**/*.vitest.ts'];
+export const vitestIgnores = ['**/*.pwtest.*', '**/playwright/**', '**/*.test-d.*'];
+
+export const vitestRules: Linter.RulesRecord = {
   'vitest/consistent-test-it': ['error', { fn: 'it', withinDescribe: 'it' }],
   'vitest/consistent-vitest-vi': ['error', { fn: 'vi' }],
   'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'assert'] }],
@@ -59,32 +60,7 @@ const vitestRules: Linter.RulesRecord = {
   'vitest/valid-title': 'error',
 };
 
-export type VitestConfigOptions = {
-  files: Array<string>;
-  ignores?: Array<string>;
-};
-
-export const createVitestConfig = ({ files, ignores = [] }: VitestConfigOptions): ReturnType<typeof defineConfig> => {
-  const excludedFiles = ['**/*.pwtest.*', '**/playwright/**', '**/*.test-d.*', ...ignores];
-
-  return defineConfig(
-    {
-      name: 'proto/vitest',
-      files,
-      ignores: excludedFiles,
-      plugins: { vitest },
-      settings: { vitest: { typecheck: false } },
-      rules: vitestRules,
-    },
-    {
-      name: 'proto/vitest-typescript',
-      files: files.map((pattern) => [pattern, '**/*.ts']),
-      ignores: excludedFiles,
-      settings: { vitest: { typecheck: true } },
-      rules: {
-        'vitest/unbound-method': 'error',
-        '@typescript-eslint/unbound-method': 'off',
-      },
-    },
-  );
+export const vitestTypescriptRules: Linter.RulesRecord = {
+  'vitest/unbound-method': 'error',
+  '@typescript-eslint/unbound-method': 'off',
 };

@@ -1,7 +1,7 @@
 {
   "name": "@protoapps/eslint-config",
   "version": "0.3.4",
-  "description": "Opinionated ESLint flat config for JavaScript, TypeScript, Node, and optional Vue and Vitest projects",
+  "description": "Opinionated ESLint flat config for JavaScript, TypeScript, Node, and optional Vue, Vitest, and Playwright projects",
   "license": "MIT",
   "repository": "github:luridev/eslint-config",
   "homepage": "https://github.com/luridev/eslint-config#readme",
@@ -45,7 +45,8 @@
     "stylistic",
     "vue",
     "accessibility",
-    "vitest"
+    "vitest",
+    "playwright"
   ],
   "dependencies": {
     "@eslint/js": "^10.0.1",
@@ -68,6 +69,7 @@
     "changelogithub": "^15.0.5",
     "cross-spawn": "^7.0.6",
     "eslint": "^10.6.0",
+    "eslint-plugin-playwright": "^2.12.2",
     "eslint-plugin-vue": "^10.9.2",
     "eslint-plugin-vuejs-accessibility": "^2.5.0",
     "globals": "^17.7.0",
@@ -82,6 +84,7 @@
   "peerDependencies": {
     "@vitest/eslint-plugin": "^1.6.28",
     "eslint": "^10.4.0",
+    "eslint-plugin-playwright": "^2.12.2",
     "eslint-plugin-vue": "^10.9.2",
     "eslint-plugin-vuejs-accessibility": "^2.5.0",
     "typescript": "^6.0.0",
@@ -89,6 +92,9 @@
   },
   "peerDependenciesMeta": {
     "@vitest/eslint-plugin": {
+      "optional": true
+    },
+    "eslint-plugin-playwright": {
       "optional": true
     },
     "eslint-plugin-vue": {

@@ -1,6 +1,6 @@
 # @protoapps/eslint-config
 
-Opinionated ESLint flat config for JavaScript, TypeScript, Vue, and Vitest.
+Opinionated ESLint flat config for JavaScript, TypeScript, Vue, Vitest, and Playwright.
 
 ## Installation
 
@@ -69,6 +69,26 @@ export default createProtoConfig({
 ```
 
 For other naming conventions, use `vitest: { files: ['src/**/*.test.ts'], ignores: ['src/node-tests/**'] }`.
+
+## Playwright
+
+Install the optional ESLint plugin:
+
+```sh
+npm install -D eslint-plugin-playwright
+```
+
+Enable Playwright rules for `**/*.pwtest.ts`:
+
+```ts
+export default createProtoConfig({
+  tsconfigRootDir: import.meta.dirname,
+  playwright: true,
+});
+```
+
+Omit `playwright` or set it to `false` to leave the plugin unloaded.
+For other paths, use `playwright: { files: ['tests/**/*.pwtest.ts'], ignores: ['tests/gallery/**'] }`.
 
 ## Customization
 
