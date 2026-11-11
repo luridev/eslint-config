@@ -12,6 +12,8 @@ const vitestPeer = '@vitest/eslint-plugin';
 const playwrightPeer = 'eslint-plugin-playwright';
 const optionalPeers = [...vuePeers, vitestPeer, playwrightPeer];
 
+assert.ok(packageRequire.resolve('eslint-plugin-check-file'), 'Naming rules must be installed with the package.');
+
 for (const peer of optionalPeers) {
   assert.throws(() => packageRequire.resolve(peer), { code: 'MODULE_NOT_FOUND' });
 }
@@ -93,3 +95,12 @@ assert.ok(regexpResult.messages.some(({ ruleId }) => ruleId === 'regexp/no-dupe-
 const [dependencyResult] = await eslint.lintText('import "eslint-plugin-import-x";\n', { filePath: 'example.js' });
 assert.equal(dependencyResult.fatalErrorCount, 0, JSON.stringify(dependencyResult.messages));
 assert.ok(dependencyResult.messages.some(({ ruleId }) => ruleId === 'import-x/no-extraneous-dependencies'));
+
+const [namingResult] = await eslint.lintText('export const value = 1;\n', {
+  filePath: 'bad-folder/bad-file.js',
+});
+assert.equal(namingResult.fatalErrorCount, 0, JSON.stringify(namingResult.messages));
+assert.deepEqual(namingResult.messages.filter(({ ruleId }) => ruleId?.startsWith('check-file/')).map(({ ruleId }) => ruleId).sort(), [
+  'check-file/filename-naming-convention',
+  'check-file/folder-naming-convention',
+]);

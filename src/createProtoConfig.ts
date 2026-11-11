@@ -1,5 +1,6 @@
 import { defineConfig } from 'eslint/config';
 import { createProtoConfig as createBaseConfig } from './base.js';
+import { namingConfig } from './integrations/naming/namingConfig.js';
 import { getPlaywrightConfig } from './integrations/playwright/getPlaywrightConfig.js';
 import { getVitestConfig } from './integrations/vitest/getVitestConfig.js';
 import { getVueConfig } from './integrations/vue/getVueConfig.js';
@@ -18,6 +19,7 @@ export const createProtoConfig = async (
     vueConfig.configs,
     vitestConfig,
     playwrightConfig,
+    namingConfig,
     ...overrides,
   );
 };
