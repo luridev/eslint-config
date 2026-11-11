@@ -1,0 +1,8 @@
+{
+  "name": "nested-dependency-policy-fixture",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "globals": "*"
+  }
+}

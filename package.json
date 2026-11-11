@@ -55,6 +55,7 @@
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-package-json": "^1.0.0",
     "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-regexp": "^3.3.3",
     "eslint-plugin-unused-imports": "^4.4.1",
     "typescript-eslint": "^8.63.0"
   },

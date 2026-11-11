@@ -46,6 +46,113 @@ const typescriptResolverFor = async (options: TestConfigOptions = {}) => {
 };
 
 describe('Flat config', () => {
+  it.each(['entry.js', 'entry.ts'])('new policies apply to %s without enabling extra RegExp rules', async (filename) => {
+    const config = await effectiveConfigFor(filename);
+
+    for (const rule of [
+      'no-promise-executor-return', 'no-self-compare', 'no-template-curly-in-string', 'no-eval',
+      'regexp/no-dupe-disjunctions', 'regexp/no-missing-g-flag', 'regexp/no-useless-dollar-replacements',
+    ]) {
+      assert.equal(config.rules[rule]?.[0], 2, rule);
+    }
+
+    assert.deepEqual(config.rules['regexp/no-super-linear-backtracking'], [2, { report: 'certain' }]);
+    assert.deepEqual(config.rules['import-x/no-extraneous-dependencies'], [2, { includeTypes: true }]);
+    assert.equal(config.rules['regexp/prefer-d'], undefined);
+
+    if (filename.endsWith('.ts')) {
+      assert.deepEqual(config.rules['@typescript-eslint/require-array-sort-compare'], [2, { ignoreStringArrays: true }]);
+    } else {
+      assert.equal(config.rules['@typescript-eslint/require-array-sort-compare'], undefined);
+    }
+  });
+
+  it.each([
+    {
+      rule: 'no-promise-executor-return',
+      invalid: 'export const promise = new Promise(() => 1);',
+      valid: 'export const promise = new Promise((resolve) => { resolve(1); });',
+    },
+    {
+      rule: 'no-self-compare',
+      invalid: 'export const equal = (value) => value === value;',
+      valid: 'export const equal = (left, right) => left === right;',
+    },
+    {
+      rule: 'no-template-curly-in-string',
+      invalid: `export const greeting = (name) => 'Hello, \${name}';`,
+      valid: `export const greeting = (name) => \`Hello, \${name}\`;`,
+    },
+    {
+      rule: 'no-eval',
+      invalid: 'export const parse = (source) => eval(source);',
+      valid: 'export const parse = (source) => JSON.parse(source);',
+    },
+    {
+      rule: 'regexp/no-dupe-disjunctions',
+      invalid: 'export const pattern = /a|a/;',
+      valid: 'export const pattern = /a|b/;',
+    },
+    {
+      rule: 'regexp/no-missing-g-flag',
+      invalid: 'export const replaced = "aaa".replaceAll(/a/, "b");',
+      valid: 'export const replaced = "aaa".replaceAll(/a/g, "b");',
+    },
+    {
+      rule: 'regexp/no-useless-dollar-replacements',
+      invalid: 'export const replaced = "aaa".replace(/a/, "$1");',
+      valid: 'export const replaced = "aaa".replace(/(a)/, "$1");',
+    },
+    {
+      rule: 'regexp/no-super-linear-backtracking',
+      invalid: 'export const match = (value) => /^(a+)+$/.test(value);',
+      valid: 'export const match = (value) => /^a+$/.test(value);',
+    },
+  ])('$rule reports invalid code and accepts valid code', async ({ rule, invalid, valid }) => {
+    const eslint = await createEslint();
+    const [invalidResult] = await eslint.lintText(`${invalid}\n`, { filePath: 'src/entry.js' });
+    const [validResult] = await eslint.lintText(`${valid}\n`, { filePath: 'src/entry.js' });
+
+    assert.equal(invalidResult.fatalErrorCount, 0, JSON.stringify(invalidResult.messages));
+    assert.equal(validResult.fatalErrorCount, 0, JSON.stringify(validResult.messages));
+    assert.equal(invalidResult.messages.filter(({ ruleId }) => ruleId === rule).length, 1);
+    assert.equal(validResult.messages.filter(({ ruleId }) => ruleId === rule).length, 0);
+  });
+
+  it('RegExp analysis supports constructors and leaves unknown patterns and potential backtracking alone', async () => {
+    const eslint = await createEslint();
+
+    const [invalid] = await eslint.lintText('export const pattern = new RegExp("a|a");\n', {
+      filePath: 'src/entry.js',
+    });
+
+    const [valid] = await eslint.lintText([
+      'export const dynamic = (source, flags) => new RegExp(source, flags);',
+      'export const potential = /a+a+/;',
+    ].join('\n'), { filePath: 'src/entry.js' });
+
+    assert.equal(invalid.fatalErrorCount, 0, JSON.stringify(invalid.messages));
+    assert.ok(invalid.messages.some(({ ruleId }) => ruleId === 'regexp/no-dupe-disjunctions'));
+    assert.equal(valid.fatalErrorCount, 0, JSON.stringify(valid.messages));
+    assert.deepEqual(valid.messages.filter(({ ruleId }) => ruleId?.startsWith('regexp/') === true), []);
+  });
+
+  it.each([
+    ['[10, 2].sort()', 1],
+    ['[10, 2].toSorted()', 1],
+    ['[{ value: 1 }].sort()', 1],
+    ['[10, 2].sort((left, right) => left - right)', 0],
+    ['["b", "a"].sort()', 0],
+    ['["b", "a"].toSorted()', 0],
+  ])('typed sorting checks %s', async (expression, expectedCount) => {
+    const [result] = await (await createEslint()).lintText(`export const sorted = ${expression};\n`, {
+      filePath: 'src/entry.ts',
+    });
+
+    assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
+    assert.equal(result.messages.filter(({ ruleId }) => ruleId === '@typescript-eslint/require-array-sort-compare').length, expectedCount);
+  });
+
   it('JavaScript linting applies common rules', async () => {
     const [result] = await (await createEslint()).lintText('export const equal = (left, right) => left == right;\ndebugger;\n', {
       filePath: join(consumerRoot, 'src/entry.js'),

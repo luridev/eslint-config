@@ -38,6 +38,19 @@ const lintSfc = async (eslint: TestESLint, text = readFileSync(sfcPath, 'utf8').
 };
 
 describe('Vue integration', () => {
+  it('common RegExp and typed sorting policies also run inside SFC scripts', async () => {
+    const rules = await lintSfc(await createEslint(), [
+      '<script setup lang="ts">',
+      'const numbers = [10, 2].sort();',
+      'const pattern = /a|a/;',
+      '</script>',
+      '<template><div>{{ numbers }} {{ pattern }}</div></template>',
+    ].join('\n'));
+
+    assert.ok(rules.has('@typescript-eslint/require-array-sort-compare'));
+    assert.ok(rules.has('regexp/no-dupe-disjunctions'));
+  });
+
   it('Vue parser and browser globals stay scoped to SFC files', async () => {
     const eslint = await createEslint();
     const component = await eslint.calculateConfigForFile(sfcPath);

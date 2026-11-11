@@ -26,6 +26,8 @@ const root = realpathSync(fileURLToPath(new URL('../', import.meta.url)));
 const require = createRequire(import.meta.url);
 const vuePeers = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
 const vitestPeer = '@vitest/eslint-plugin';
+const playwrightPeer = 'eslint-plugin-playwright';
+const optionalPeers = [...vuePeers, vitestPeer, playwrightPeer];
 
 function run(command: string, args: Array<string>, cwd = root, capture = false): string {
   const label = `${command} ${args.join(' ')}`;
@@ -77,13 +79,14 @@ try {
   const verifyConsumer = (fixture: string, plugins: Array<string> = [], scripts = ['runtime.mjs'], consumerName = fixture) => {
     const consumer = join(temporaryRoot, consumerName);
     cpSync(join(root, 'tests/fixtures', fixture), consumer, { recursive: true });
-    const withVitest = plugins.some((name) => name.startsWith(`${vitestPeer}@`));
 
-    if (withVitest) {
-      cpSync(join(root, 'tests/fixtures/vitest-consumer/src'), join(consumer, 'src'), { recursive: true });
+    for (const [peer, integration] of [[vitestPeer, 'vitest'], [playwrightPeer, 'playwright']]) {
+      if (plugins.some((name) => name.startsWith(`${peer}@`))) {
+        cpSync(join(root, `tests/fixtures/${integration}-consumer/src`), join(consumer, 'src'), { recursive: true });
 
-      for (const script of scripts.filter((name) => name.startsWith('vitest-'))) {
-        cpSync(join(root, 'tests/fixtures/package-vitest-consumer', script), join(consumer, script));
+        for (const script of scripts.filter((name) => name.startsWith(`${integration}-`))) {
+          cpSync(join(root, `tests/fixtures/package-${integration}-consumer`, script), join(consumer, script));
+        }
       }
     }
 
@@ -103,7 +106,7 @@ try {
 
     const lock = JSON.parse(readFileSync(join(consumer, 'package-lock.json'), 'utf8')) as PackageLock;
 
-    for (const peer of [...vuePeers, vitestPeer]) {
+    for (const peer of optionalPeers) {
       if (!plugins.some((name) => name.startsWith(`${peer}@`))) {
         assert.ok(
           !Object.keys(lock.packages).some((path) => path.endsWith(`node_modules/${peer}`)),
@@ -133,6 +136,8 @@ try {
   const vitestScripts = ['vitest-runtime.mjs', 'vitest-disabled.mjs', 'vitest-broken-plugin.mjs'];
   verifyConsumer('package-vitest-consumer', [vitestPlugin], vitestScripts);
   verifyConsumer('package-vue-consumer', [...plugins, vitestPlugin], ['vitest-runtime.mjs'], 'package-vue-vitest-consumer');
+  const playwrightVersion = (JSON.parse(readFileSync(join(root, 'node_modules', playwrightPeer, 'package.json'), 'utf8')) as PackageManifest).version;
+  verifyConsumer('package-playwright-consumer', [`${playwrightPeer}@${playwrightVersion}`], ['playwright-runtime.mjs']);
   process.stdout.write('Package verified successfully.\n');
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });

@@ -5,6 +5,7 @@ import { defineConfig } from 'eslint/config';
 import { createTypeScriptImportResolver, defaultExtensions } from 'eslint-import-resolver-typescript';
 import packageJson from 'eslint-package-json';
 import importX, { createNodeResolver } from 'eslint-plugin-import-x';
+import regexp from 'eslint-plugin-regexp';
 import unusedImports from 'eslint-plugin-unused-imports';
 import tseslint from 'typescript-eslint';
 import type { Linter } from 'eslint';
@@ -25,6 +26,10 @@ const coreRules: Linter.RulesRecord = {
   'no-empty': ['error', { allowEmptyCatch: true }],
   'no-return-assign': ['error', 'always'],
   'no-debugger': 'error',
+  'no-promise-executor-return': 'error',
+  'no-self-compare': 'error',
+  'no-template-curly-in-string': 'error',
+  'no-eval': 'error',
   'no-console': 'warn',
   'prefer-const': 'error',
   'object-shorthand': 'error',
@@ -43,6 +48,7 @@ const coreRules: Linter.RulesRecord = {
 };
 
 const typescriptRules: Linter.RulesRecord = {
+  '@typescript-eslint/require-array-sort-compare': ['error', { ignoreStringArrays: true }],
   '@typescript-eslint/consistent-type-imports': 'error',
   '@typescript-eslint/array-type': ['error', { default: 'generic', readonly: 'generic' }],
   '@typescript-eslint/no-shadow': 'warn',
@@ -65,6 +71,7 @@ const typescriptRules: Linter.RulesRecord = {
 };
 
 const importRules: Linter.RulesRecord = {
+  'import-x/no-extraneous-dependencies': ['error', { includeTypes: true }],
   'sort-imports': 'off',
   'import-x/no-duplicates': ['error', { 'prefer-inline': false }],
   'import-x/no-absolute-path': 'error',
@@ -97,6 +104,13 @@ const importRules: Linter.RulesRecord = {
       'newlines-between': 'never',
     },
   ],
+};
+
+const regexpRules: Linter.RulesRecord = {
+  'regexp/no-dupe-disjunctions': 'error',
+  'regexp/no-missing-g-flag': 'error',
+  'regexp/no-useless-dollar-replacements': 'error',
+  'regexp/no-super-linear-backtracking': ['error', { report: 'certain' }],
 };
 
 const unusedRules: Linter.RulesRecord = {
@@ -166,6 +180,7 @@ const defineProtoConfig = ({
 
     plugins: {
       'import-x': importX,
+      regexp,
       'unused-imports': unusedImports,
     },
 
@@ -211,6 +226,7 @@ const defineProtoConfig = ({
     rules: {
       ...coreRules,
       ...importRules,
+      ...regexpRules,
       ...unusedRules,
     },
   },

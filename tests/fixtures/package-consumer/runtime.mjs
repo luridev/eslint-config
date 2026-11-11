@@ -8,8 +8,11 @@ const consumer = fileURLToPath(new URL('.', import.meta.url));
 const require = createRequire(import.meta.url);
 const packageRequire = createRequire(require.resolve('@protoapps/eslint-config'));
 const vuePeers = ['eslint-plugin-vue', 'vue-eslint-parser', 'eslint-plugin-vuejs-accessibility'];
+const vitestPeer = '@vitest/eslint-plugin';
+const playwrightPeer = 'eslint-plugin-playwright';
+const optionalPeers = [...vuePeers, vitestPeer, playwrightPeer];
 
-for (const peer of [...vuePeers, '@vitest/eslint-plugin']) {
+for (const peer of optionalPeers) {
   assert.throws(() => packageRequire.resolve(peer), { code: 'MODULE_NOT_FOUND' });
 }
 
@@ -29,12 +32,29 @@ await assert.rejects(() => createProtoConfig({
 await assert.rejects(() => createProtoConfig({ tsconfigRootDir: consumer, vitest: true }),
   /Vitest.*@vitest\/eslint-plugin.*npm install/);
 
+await assert.rejects(() => createProtoConfig({ tsconfigRootDir: consumer, playwright: true }), (error) => {
+  assert.match(error.message, /Playwright.*missing optional peer dependency/);
+  assert.ok(error.message.includes(playwrightPeer));
+  assert.match(error.message, /npm install --save-dev/);
+
+  return true;
+});
+
 const pending = createProtoConfig({ tsconfigRootDir: consumer });
 assert.ok(pending instanceof Promise, 'The factory must return a Promise.');
 const config = await pending;
 assert.ok(Array.isArray(config), 'The factory must resolve to a config array.');
 assert.ok(Array.isArray(await createProtoConfig({ tsconfigRootDir: consumer, vue: false })));
 assert.ok(Array.isArray(await createProtoConfig({ tsconfigRootDir: consumer, vitest: false })));
+
+const disabledPlaywright = new ESLint({
+  cwd: consumer,
+  overrideConfigFile: true,
+  overrideConfig: await createProtoConfig({ tsconfigRootDir: consumer, playwright: false }),
+});
+const [disabledResult] = await disabledPlaywright.lintText('debugger;\n', { filePath: 'example.js' });
+assert.equal(disabledResult.fatalErrorCount, 0, JSON.stringify(disabledResult.messages));
+assert.ok(disabledResult.messages.some(({ ruleId }) => ruleId === 'no-debugger'));
 
 const eslint = new ESLint({
   cwd: consumer,
@@ -59,3 +79,17 @@ const [typedResult] = await eslint.lintText('Promise.resolve(1);\n', {
 });
 assert.equal(typedResult.fatalErrorCount, 0, JSON.stringify(typedResult.messages));
 assert.ok(typedResult.messages.some(({ ruleId }) => ruleId === '@typescript-eslint/no-floating-promises'));
+
+const [sortResult] = await eslint.lintText('export const sorted = [10, 2].sort();\n', {
+  filePath: fileURLToPath(new URL('contracts.ts', import.meta.url)),
+});
+assert.equal(sortResult.fatalErrorCount, 0, JSON.stringify(sortResult.messages));
+assert.ok(sortResult.messages.some(({ ruleId }) => ruleId === '@typescript-eslint/require-array-sort-compare'));
+
+const [regexpResult] = await eslint.lintText('export const pattern = /a|a/;\n', { filePath: 'example.js' });
+assert.equal(regexpResult.fatalErrorCount, 0, JSON.stringify(regexpResult.messages));
+assert.ok(regexpResult.messages.some(({ ruleId }) => ruleId === 'regexp/no-dupe-disjunctions'));
+
+const [dependencyResult] = await eslint.lintText('import "eslint-plugin-import-x";\n', { filePath: 'example.js' });
+assert.equal(dependencyResult.fatalErrorCount, 0, JSON.stringify(dependencyResult.messages));
+assert.ok(dependencyResult.messages.some(({ ruleId }) => ruleId === 'import-x/no-extraneous-dependencies'));
