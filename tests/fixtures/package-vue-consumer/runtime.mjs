@@ -34,3 +34,12 @@ assert.equal(vue.fatalErrorCount, 0, JSON.stringify(vue.messages));
 for (const rule of ['@typescript-eslint/no-floating-promises', 'vuejs-accessibility/alt-text']) {
   assert.ok(vue.messages.some(({ ruleId }) => ruleId === rule), `Expected ${rule}: ${JSON.stringify(vue.messages)}`);
 }
+
+const unusedPropSfc = readFileSync(component, 'utf8')
+  .replace("const message = 'fixture';", "defineProps<{ unused: string }>();\n\nconst message = 'fixture';");
+const [unusedProp] = await eslint.lintText(unusedPropSfc, { filePath: fileURLToPath(component) });
+assert.equal(unusedProp.fatalErrorCount, 0, JSON.stringify(unusedProp.messages));
+assert.deepEqual(
+  unusedProp.messages.filter(({ ruleId }) => ruleId === 'vue/no-unused-properties').map(({ severity, messageId }) => ({ severity, messageId })),
+  [{ severity: 2, messageId: 'unused' }],
+);

@@ -30,12 +30,16 @@ const createEslint = async (
   overrideConfig: await createConfig(options, ...overrides),
 });
 
-const lintSfc = async (eslint: TestESLint, text = readFileSync(sfcPath, 'utf8').replace(/\r?\n/g, '\r\n')) => {
+const lintSfcMessages = async (eslint: TestESLint, text: string) => {
   const [result] = await eslint.lintText(text, { filePath: sfcPath });
   assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
 
-  return new Set(result.messages.map(({ ruleId }) => ruleId));
+  return result.messages;
 };
+
+const lintSfc = async (eslint: TestESLint, text = readFileSync(sfcPath, 'utf8').replace(/\r?\n/g, '\r\n')) => new Set(
+  (await lintSfcMessages(eslint, text)).map(({ ruleId }) => ruleId),
+);
 
 describe('Vue integration', () => {
   it('common RegExp and typed sorting policies also run inside SFC scripts', async () => {
@@ -68,6 +72,8 @@ describe('Vue integration', () => {
     assert.equal(component.languageOptions.globals?.window, false);
     assert.equal(typescript.languageOptions.parser?.meta?.name, 'typescript-eslint/parser');
     assert.equal(typescript.languageOptions.globals?.window, undefined);
+    assert.deepEqual(component.rules['vue/no-unused-properties'], [2, { groups: ['props'] }]);
+    assert.equal(typescript.rules['vue/no-unused-properties'], undefined);
   });
 
   it('Vue version controls supported template syntax', async () => {
@@ -188,5 +194,153 @@ describe('Vue integration', () => {
     for (const vue of [true, null, {}, { version: '' }, { version: ' ' }, { version: 3 }]) {
       await assert.rejects(() => createConfig({ vue: vue as unknown as ProtoConfigOptions['vue'] }), /vue.*version/is);
     }
+  });
+
+  it.each([
+    {
+      name: 'unused inline prop',
+      script: 'defineProps<{ unused: string }>();',
+      template: '<div>Content</div>',
+      unused: ['unused'],
+    },
+    {
+      name: 'prop used in template',
+      script: 'const props = defineProps<{ used: string; unused?: string }>();',
+      template: '<div>{{ props.used }}</div>',
+      unused: ['unused'],
+    },
+    {
+      name: 'prop used in script setup',
+      script: 'const props = defineProps<{ used: string; unused?: string }>();\nconst rendered = props.used;',
+      template: '<div>{{ rendered }}</div>',
+      unused: ['unused'],
+    },
+    {
+      name: 'imported TypeScript props',
+      script: 'import type { ExampleProps } from \'@fixture/types\';\nconst props = defineProps<ExampleProps>();',
+      template: '<div>{{ props.used }}</div>',
+      unused: ['unused'],
+    },
+    {
+      name: 'inline props forwarded to an imported composable',
+      script: 'import { useProps } from \'@fixture/useProps\';\nconst props = defineProps<{ label: string; detail: string }>();\nconst rendered = useProps(props);',
+      template: '<div>{{ rendered }}</div>',
+      unused: [],
+    },
+    {
+      name: 'imported props forwarded to an imported composable',
+      script: 'import type { ComposableProps } from \'@fixture/types\';\nimport { useProps } from \'@fixture/useProps\';\nconst props = defineProps<ComposableProps>();\nconst rendered = useProps(props);',
+      template: '<div>{{ rendered }}</div>',
+      unused: [],
+    },
+    {
+      name: 'withDefaults does not count a default as usage',
+      script: 'const props = withDefaults(defineProps<{ used?: string; unused?: string }>(), { used: \'default\', unused: \'default\' });',
+      template: '<div>{{ props.used }}</div>',
+      unused: ['unused'],
+    },
+    {
+      name: 'destructured prop with a default',
+      script: 'const { used = \'default\' } = defineProps<{ used?: string; unused?: string }>();',
+      template: '<div>{{ used }}</div>',
+      unused: ['unused'],
+    },
+    {
+      name: 'defineModel alongside unused props',
+      script: 'defineProps<{ unused?: string }>();\nconst model = defineModel<string>();',
+      template: '<input v-model="model" />',
+      unused: ['unused'],
+    },
+    {
+      name: 'dynamic script access',
+      script: 'const props = defineProps<{ first: string; second: string }>();\nconst key = Math.random() > 0.5 ? \'first\' : \'second\';\nconst rendered = props[key];',
+      template: '<div>{{ rendered }}</div>',
+      unused: [],
+    },
+    {
+      name: 'dynamic template access',
+      script: 'const props = defineProps<{ first: string; second: string }>();\nconst key = Math.random() > 0.5 ? \'first\' : \'second\';',
+      template: '<div>{{ props[key] }}</div>',
+      unused: [],
+    },
+    {
+      name: 'public annotations do not exempt props',
+      script: 'defineProps<{\n/** @public */\nexternal?: string;\nunused?: string;\n}>();',
+      template: '<div>Content</div>',
+      unused: ['external', 'unused'],
+    },
+  ])('unused properties: $name', async ({ script, template, unused }) => {
+    const text = `<script setup lang="ts">\n${script}\n</script>\n\n<template>\n  ${template}\n</template>\n`;
+
+    const messages = (await lintSfcMessages(await createEslint(), text))
+      .filter(({ ruleId }) => ruleId === 'vue/no-unused-properties');
+
+    assert.deepEqual(messages.map(({ message }) => message.split('\'')[1]), unused);
+
+    for (const message of messages) {
+      assert.equal(message.severity, 2);
+      assert.equal(message.messageId, 'unused');
+    }
+  });
+
+  it('checks only props by default and honors public methods in consumer overrides', async () => {
+    const text = [
+      '<script lang="ts">',
+      'export default {',
+      '  props: {',
+      '    /** @public */',
+      '    unusedProp: String,',
+      '  },',
+      '  data() { return { unusedData: 1 }; },',
+      '  computed: { unusedComputed() { return 1; } },',
+      '  setup() { return { unusedSetup: 1 }; },',
+      '  methods: {',
+      '    /** @public */',
+      '    externalMethod() { return 1; },',
+      '    unusedMethod() { return 1; },',
+      '  },',
+      '};',
+      '</script>',
+      '<template><div>Content</div></template>',
+    ].join('\n');
+
+    const defaults = (await lintSfcMessages(await createEslint(), text))
+      .filter(({ ruleId }) => ruleId === 'vue/no-unused-properties');
+
+    const publicMembers = (await lintSfcMessages(await createEslint({}, {
+      files: ['**/*.vue'],
+      rules: { 'vue/no-unused-properties': ['error', { groups: ['props'], ignorePublicMembers: true }] },
+    }), text)).filter(({ ruleId }) => ruleId === 'vue/no-unused-properties');
+
+    const overridden = (await lintSfcMessages(await createEslint({}, {
+      files: ['**/*.vue'],
+      rules: { 'vue/no-unused-properties': ['warn', { groups: ['props', 'methods'], ignorePublicMembers: true }] },
+    }), text)).filter(({ ruleId }) => ruleId === 'vue/no-unused-properties');
+
+    assert.deepEqual(defaults.map(({ message }) => message.split('\'')[1]), ['unusedProp']);
+    assert.deepEqual(defaults.map(({ severity }) => severity), [2]);
+    assert.deepEqual(publicMembers, defaults);
+    assert.deepEqual(overridden.map(({ message }) => message.split('\'')[1]), ['unusedProp', 'unusedMethod']);
+    assert.deepEqual(overridden.map(({ severity }) => severity), [1, 1]);
+  });
+
+  it.each([
+    ['vue/no-mutating-props', '<script setup lang="ts">const props = defineProps<{ label: string }>(); props.label = "changed";</script><template><div>{{ props.label }}</div></template>'],
+    ['vue/require-v-for-key', '<script setup lang="ts">const items = [1, 2];</script><template><div v-for="item in items">{{ item }}</div></template>'],
+    ['vue/valid-v-model', '<script setup lang="ts">const value = 1;</script><template><div v-model="value"></div></template>'],
+    ['vue/no-undef-components', '<template><MissingComponent /></template>'],
+    ['vue/no-undef-properties', '<script setup lang="ts">const value = 1;</script><template><div>{{ value }} {{ missing }}</div></template>'],
+    ['vue/no-side-effects-in-computed-properties', '<script lang="ts">export default { data() { return { value: 0 }; }, computed: { result() { this.value++; return this.value; } } };</script><template><div>{{ result }}</div></template>'],
+    ['vue/no-dupe-keys', '<script lang="ts">export default { props: ["name"], data() { return { name: "duplicate" }; } };</script><template><div>{{ name }}</div></template>'],
+    ['vue/no-dupe-keys', '<script setup lang="ts">defineProps<{ title: string }>(); const value = defineModel<string>("title");</script><template><div>{{ value }}</div></template>'],
+    ['vue/require-valid-default-prop', '<script setup lang="ts">const model = defineModel<number>({ default: "wrong" });</script><template><div>{{ model }}</div></template>'],
+  ])('retains %s diagnostics', async (rule, text) => {
+    const rules = await lintSfc(await createEslint(), text);
+    assert.ok(rules.has(rule), `Expected ${rule}: ${JSON.stringify([...rules])}`);
+  });
+
+  it('recognizes a recursive script setup component named with defineOptions', async () => {
+    const rules = await lintSfc(await createEslint(), '<script setup lang="ts">defineOptions({ name: "RecursivePanel" });</script><template><RecursivePanel /></template>');
+    assert.ok(!rules.has('vue/no-undef-components'));
   });
 });

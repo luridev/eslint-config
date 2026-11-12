@@ -72,6 +72,7 @@ export const vueRules: Linter.RulesRecord = {
   'vue/no-undef-components': 'error',
   'vue/no-undef-properties': 'error',
   'vue/no-unused-emit-declarations': 'error',
+  'vue/no-unused-properties': ['error', { groups: ['props'] }],
   'vue/no-unused-refs': 'error',
   'vue/no-use-v-else-with-v-for': 'error',
   'vue/padding-line-between-blocks': ['error', 'always'],
