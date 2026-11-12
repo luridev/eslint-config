@@ -72,7 +72,14 @@ const typescriptRules: Linter.RulesRecord = {
 
 const importRules: Linter.RulesRecord = {
   'import-x/no-extraneous-dependencies': ['error', { includeTypes: true }],
-  'sort-imports': 'off',
+  'sort-imports': [
+    'error',
+    {
+      ignoreDeclarationSort: true,
+      ignoreMemberSort: false,
+      ignoreCase: true,
+    },
+  ],
   'import-x/no-duplicates': ['error', { 'prefer-inline': false }],
   'import-x/no-absolute-path': 'error',
   'import-x/first': 'error',
