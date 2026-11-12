@@ -11,7 +11,7 @@ import { createProtoConfig } from '@protoapps/eslint-config';
 import type { ConfigOverrides, TestConfigOptions, TestESLint } from '#tests/types.js';
 import type { ProtoConfigOptions } from '@protoapps/eslint-config';
 
-const consumerRoot = join(dirname(fileURLToPath(import.meta.url)), 'fixtures/vue-consumer');
+const consumerRoot = join(dirname(fileURLToPath(import.meta.url)), '../fixtures/vue-consumer');
 
 const createConfig = (options: TestConfigOptions = {}, ...overrides: ConfigOverrides) => createProtoConfig({
   tsconfigRootDir: consumerRoot,

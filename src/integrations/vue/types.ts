@@ -1,11 +1,11 @@
 import type { defineConfig } from 'eslint/config';
-import type { ProtoConfigOptions as BaseProtoConfigOptions } from '../../base.js';
+import type { BaseConfigOptions } from '../../base/types.js';
 
 export type VueConfigOptions = {
   version: string;
 };
 
 export type VueConfigResult = {
-  baseOptions: BaseProtoConfigOptions;
+  baseOptions: BaseConfigOptions;
   configs: ReturnType<typeof defineConfig>;
 };

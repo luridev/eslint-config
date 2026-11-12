@@ -8,8 +8,7 @@ import { createProtoConfig } from '@protoapps/eslint-config';
 import type { TestConfigOptions, TestESLint } from '#tests/types.js';
 import type { ProtoConfigOptions } from '@protoapps/eslint-config';
 
-const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const consumerRoot = join(packageRoot, 'tests/fixtures/vitest-consumer');
+const consumerRoot = join(dirname(fileURLToPath(import.meta.url)), '../fixtures/vitest-consumer');
 
 const createConfig = (options: TestConfigOptions = {}) => createProtoConfig({
   tsconfigRootDir: consumerRoot,

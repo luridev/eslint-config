@@ -8,8 +8,7 @@ import { createProtoConfig } from '@protoapps/eslint-config';
 import type { TestConfigOptions, TestESLint } from '#tests/types.js';
 import type { ProtoConfigOptions } from '@protoapps/eslint-config';
 
-const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-const consumerRoot = join(packageRoot, 'tests/fixtures/playwright-consumer');
+const consumerRoot = join(dirname(fileURLToPath(import.meta.url)), '../fixtures/playwright-consumer');
 
 const createEslint = async (options: TestConfigOptions = {}): Promise<TestESLint> => new ESLint({
   cwd: consumerRoot,

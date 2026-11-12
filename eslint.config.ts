@@ -10,7 +10,7 @@ export default defineConfig(
   globalIgnores(['dist/**', 'tests/fixtures/**']),
   await createProtoConfig({
     tsconfigRootDir,
-    vitest: { files: ['tests/*.test.ts'] },
+    vitest: { files: ['tests/*.test.ts', 'tests/base/*.test.ts', 'tests/integrations/*.test.ts'] },
   }),
   {
     name: 'repo/node',
@@ -21,7 +21,7 @@ export default defineConfig(
   },
   {
     name: 'repo/internal-imports',
-    files: ['eslint.config.ts', 'src/index.ts', 'src/createProtoConfig.ts', 'src/types.ts', 'src/integrations/**/*.ts'],
+    files: ['eslint.config.ts', 'src/index.ts', 'src/createProtoConfig.ts', 'src/types.ts', 'src/base/**/*.ts', 'src/integrations/**/*.ts'],
     rules: {
       '@typescript-eslint/no-restricted-imports': 'off',
     },

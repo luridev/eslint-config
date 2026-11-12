@@ -6,7 +6,6 @@ import { ESLint } from 'eslint';
 import { afterAll, beforeAll, describe, it } from 'vitest';
 import { createProtoConfig } from '@protoapps/eslint-config';
 
-// Representative boundaries of our filename and directory patterns, not a matcher conformance suite.
 const paths = [
   ['useButton.ts', 0, 0],
   ['DrButton.js', 0, 0],

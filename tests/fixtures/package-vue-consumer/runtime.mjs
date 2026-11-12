@@ -40,5 +40,4 @@ for (const rule of ['@typescript-eslint/no-floating-promises', 'vuejs-accessibil
   assert.ok(vue.messages.some(({ ruleId }) => ruleId === rule), `Expected ${rule}: ${JSON.stringify(vue.messages)}`);
 }
 
-// The processor must apply the template directive while the adjacent element is still checked.
 assert.equal(vue.messages.filter(({ ruleId }) => ruleId === 'vuejs-accessibility/alt-text').length, 1);

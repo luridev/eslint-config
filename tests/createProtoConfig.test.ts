@@ -21,7 +21,6 @@ const runFixture = (name: string) => promisify(execFile)(
 describe('Integration composition', () => {
   let eslint: TestESLint;
 
-  // Cold optional imports and ESLint initialization belong to setup, not the assertion timeout.
   beforeAll(async () => {
     eslint = new ESLint({
       cwd: consumerRoot,

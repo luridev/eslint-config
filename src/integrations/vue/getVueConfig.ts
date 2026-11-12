@@ -1,7 +1,7 @@
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import { vueAccessibilityRules, vueFiles, vuePeerDependencies, vueRules, vueStylisticRules } from './config.js';
-import type { ProtoConfigOptions as BaseProtoConfigOptions } from '../../base.js';
+import type { BaseConfigOptions } from '../../base/types.js';
 import type { VueConfigOptions, VueConfigResult } from './types.js';
 
 const isVueConfigOptions = (value: unknown): value is VueConfigOptions => (
@@ -14,7 +14,7 @@ const isVueConfigOptions = (value: unknown): value is VueConfigOptions => (
 
 export const getVueConfig = async (
   vue: false | VueConfigOptions | undefined,
-  options: BaseProtoConfigOptions,
+  options: BaseConfigOptions,
 ): Promise<VueConfigResult> => {
   if (vue === undefined || vue === false) {
     return { baseOptions: options, configs: [] };

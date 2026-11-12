@@ -1,6 +1,6 @@
 import { defineConfig } from 'eslint/config';
-import { createProtoConfig as createBaseConfig } from './base.js';
-import { namingConfig } from './integrations/naming/namingConfig.js';
+import { createBaseConfig } from './base/createBaseConfig.js';
+import { namingConfig } from './base/naming/namingConfig.js';
 import { getPlaywrightConfig } from './integrations/playwright/getPlaywrightConfig.js';
 import { getVitestConfig } from './integrations/vitest/getVitestConfig.js';
 import { getVueConfig } from './integrations/vue/getVueConfig.js';

@@ -24,6 +24,8 @@
     "src/**/*.ts",
     "scripts/**/*.ts",
     "tests/*.ts",
+    "tests/base/*.ts",
+    "tests/integrations/*.ts",
     "*.config.ts"
   ]
 }

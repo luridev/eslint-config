@@ -6,7 +6,7 @@ import { beforeAll, describe, it } from 'vitest';
 import { createProtoConfig } from '@protoapps/eslint-config';
 import type { ConfigOverrides, TestConfigOptions, TestESLint } from '#tests/types.js';
 
-const consumerRoot = join(dirname(fileURLToPath(import.meta.url)), 'fixtures/consumer');
+const consumerRoot = join(dirname(fileURLToPath(import.meta.url)), '../fixtures/consumer');
 
 const createEslint = async (
   options: TestConfigOptions = {}, ...overrides: ConfigOverrides
