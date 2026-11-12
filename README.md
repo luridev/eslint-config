@@ -18,6 +18,9 @@ export default createProtoConfig({
 });
 ```
 
+Packages used in imports, including type-only imports (`import type`), must be declared
+in the appropriate `package.json`.
+
 `createProtoConfig()` is asynchronous and returns a Promise of the config array.
 ESLint resolves the default export automatically. Await the factory when composing
 configs programmatically or passing the result to the ESLint API:
@@ -51,6 +54,8 @@ export default createProtoConfig({
 });
 ```
 
+Replace `3.5.40` with the Vue version used by your project.
+
 ## Vitest
 
 Install the additional ESLint plugin:
@@ -62,6 +67,8 @@ npm install -D @vitest/eslint-plugin
 Enable strict Vitest rules for `**/*.vitest.ts`:
 
 ```ts
+import { createProtoConfig } from '@protoapps/eslint-config';
+
 export default createProtoConfig({
   tsconfigRootDir: import.meta.dirname,
   vitest: true,
@@ -81,6 +88,8 @@ npm install -D eslint-plugin-playwright
 Enable Playwright rules for `**/*.pwtest.ts`:
 
 ```ts
+import { createProtoConfig } from '@protoapps/eslint-config';
+
 export default createProtoConfig({
   tsconfigRootDir: import.meta.dirname,
   playwright: true,
@@ -95,6 +104,8 @@ For other paths, use `playwright: { files: ['tests/**/*.pwtest.ts'], ignores: ['
 Pass additional [ESLint Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files) entries after the options:
 
 ```ts
+import { createProtoConfig } from '@protoapps/eslint-config';
+
 export default createProtoConfig(
   {
     tsconfigRootDir: import.meta.dirname,
