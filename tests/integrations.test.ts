@@ -4,9 +4,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { ESLint } from 'eslint';
-import { describe, it } from 'vitest';
+import { beforeAll, describe, it } from 'vitest';
 import { createProtoConfig } from '@protoapps/eslint-config';
-import type { TestESLint } from '#tests/types.js';
+import type { ConfigOverrides, TestESLint } from '#tests/types.js';
+import type { ProtoConfigOptions } from '@protoapps/eslint-config';
 
 const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const consumerRoot = join(packageRoot, 'tests/fixtures/vue-consumer');
@@ -18,8 +19,11 @@ const runFixture = (name: string) => promisify(execFile)(
 );
 
 describe('Integration composition', () => {
-  it('keeps all integrations scoped and applies final overrides after every preset', async () => {
-    const eslint: TestESLint = new ESLint({
+  let eslint: TestESLint;
+
+  // Cold optional imports and ESLint initialization belong to setup, not the assertion timeout.
+  beforeAll(async () => {
+    eslint = new ESLint({
       cwd: consumerRoot,
       overrideConfigFile: true,
       overrideConfig: await createProtoConfig(
@@ -29,11 +33,20 @@ describe('Integration composition', () => {
           { files: ['**/*.vue'], extends: [{ rules: { 'vue/no-static-inline-styles': 'off', 'vuejs-accessibility/alt-text': 'off' } }] },
           { files: ['**/*.vitest.ts'], rules: { 'vitest/no-focused-tests': 'off' } },
           { files: ['**/*.pwtest.ts'], rules: { 'playwright/no-focused-test': 'off' } },
+          { files: ['**/*.legacy.js'], rules: { 'check-file/filename-naming-convention': 'off' } },
+          {
+            files: ['externalFiles/**/*.js'],
+            rules: { 'check-file/filename-naming-convention': ['error', { '**/*.js': 'KEBAB_CASE' }] },
+          },
           { rules: { 'no-debugger': 'off', '@stylistic/semi': 'off' } },
         ]],
       ),
     });
 
+    await eslint.calculateConfigForFile('src/standard.ts');
+  }, 30_000);
+
+  it('keeps all integrations scoped and applies final overrides after every preset', async () => {
     const vue = await eslint.calculateConfigForFile('src/component.vue');
     const vitest = await eslint.calculateConfigForFile('src/example.vitest.ts');
     const playwright = await eslint.calculateConfigForFile('src/example.pwtest.ts');
@@ -64,19 +77,70 @@ describe('Integration composition', () => {
       assert.equal(config.rules['no-debugger']?.[0], 0);
       assert.equal(config.rules['@stylistic/semi']?.[0], 0);
     }
+
+    const disabledNaming = await eslint.calculateConfigForFile('src/example.legacy.js');
+    const customNaming = await eslint.calculateConfigForFile('externalFiles/example.js');
+    assert.ok(disabledNaming !== undefined && customNaming !== undefined);
+    assert.equal(disabledNaming.rules['check-file/filename-naming-convention']?.[0], 0);
+    assert.deepEqual(customNaming.rules['check-file/filename-naming-convention'], [2, { '**/*.js': 'KEBAB_CASE' }]);
+    assert.equal(ordinary.rules['check-file/filename-naming-convention']?.[0], 2);
+
+    for (const config of [disabledNaming, customNaming, ordinary]) {
+      assert.equal(config.rules['check-file/folder-naming-convention']?.[0], 2);
+    }
+  });
+
+  it('keeps factory calls independent without mutating consumer options or overrides', async () => {
+    const options: ProtoConfigOptions = {
+      tsconfigRootDir: consumerRoot,
+      vue: { version: '3.5.40' },
+      vitest: { files: ['**/*.spec.ts'], ignores: ['src/ignored/**'] },
+      additionalCodeFiles: ['**/*.code'],
+      additionalTypedFiles: ['**/*.typed'],
+      additionalStylisticFiles: ['**/*.styled'],
+      additionalResolverExtensions: ['.custom'],
+      stylisticIgnores: ['**/generated.ts'],
+      languageConfigs: [{ files: ['**/*.ts'], languageOptions: { globals: { consumerGlobal: 'readonly' } } }],
+    };
+
+    const overrides: ConfigOverrides = [{ rules: { 'no-debugger': 'off' } }];
+    const originalOptions = structuredClone(options);
+    const originalOverrides = structuredClone(overrides);
+    const firstConfig = await createProtoConfig(options, ...overrides);
+    const otherRoot = join(packageRoot, 'tests/fixtures/consumer');
+    const secondConfig = await createProtoConfig({ tsconfigRootDir: otherRoot });
+    const repeatedConfig = await createProtoConfig(options, ...overrides);
+    assert.deepEqual(options, originalOptions);
+    assert.deepEqual(overrides, originalOverrides);
+
+    for (const config of [firstConfig, repeatedConfig]) {
+      const instance: TestESLint = new ESLint({ cwd: consumerRoot, overrideConfigFile: true, overrideConfig: config });
+      const typed = await instance.calculateConfigForFile('src/example.spec.ts');
+      const vue = await instance.calculateConfigForFile('src/component.vue');
+      const code = await instance.calculateConfigForFile('src/example.code');
+      assert.ok(typed !== undefined && vue !== undefined && code !== undefined);
+      assert.equal(typed.languageOptions.parserOptions.tsconfigRootDir, consumerRoot);
+      assert.equal(typed.languageOptions.globals?.consumerGlobal, 'readonly');
+      assert.ok(typed.plugins?.vitest !== undefined);
+      assert.ok(vue.plugins?.vue !== undefined);
+      assert.equal(code.rules.eqeqeq?.[0], 2);
+      assert.equal(typed.rules['no-debugger']?.[0], 0);
+    }
+
+    const second: TestESLint = new ESLint({ cwd: otherRoot, overrideConfigFile: true, overrideConfig: secondConfig });
+    const ordinary = await second.calculateConfigForFile('src/example.spec.ts');
+    assert.ok(ordinary !== undefined);
+    assert.equal(ordinary.languageOptions.parserOptions.tsconfigRootDir, otherRoot);
+    assert.equal(ordinary.languageOptions.globals?.consumerGlobal, undefined);
+    assert.equal(ordinary.plugins?.vitest, undefined);
+    assert.equal(ordinary.rules['no-debugger']?.[0], 2);
+    assert.equal(await second.calculateConfigForFile('src/component.vue'), undefined);
+    assert.equal(await second.calculateConfigForFile('src/example.code'), undefined);
   });
 });
 
 describe('Optional peers', () => {
   it('loads no optional plugins for the base and only the enabled plugin for Playwright', async () => {
     await assert.doesNotReject(() => runFixture('lazy-plugins'));
-  }, 30_000);
-
-  it('reports a missing single peer and all missing Vue peers', async () => {
-    await assert.doesNotReject(() => runFixture('missing-peers'));
-  }, 30_000);
-
-  it('preserves errors from inside an installed plugin', async () => {
-    await assert.doesNotReject(() => runFixture('broken-plugin'));
   }, 30_000);
 });

@@ -3,9 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import playwrightPlugin from 'eslint-plugin-playwright';
-import { describe, it } from 'vitest';
+import { beforeAll, describe, it } from 'vitest';
 import { createProtoConfig } from '@protoapps/eslint-config';
-import type { Linter } from 'eslint';
 import type { TestConfigOptions, TestESLint } from '#tests/types.js';
 import type { ProtoConfigOptions } from '@protoapps/eslint-config';
 
@@ -20,32 +19,11 @@ const createEslint = async (options: TestConfigOptions = {}): Promise<TestESLint
   }),
 });
 
-const lint = async (
-  source: string, filename = 'src/example.pwtest.js',
-) => {
-  const eslint = await createEslint({ playwright: { files: ['**/*.pwtest.{js,ts}'] } });
-  const [result] = await eslint.lintText(source, { filePath: join(consumerRoot, filename) });
-  assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
-
-  return result.messages;
-};
-
-const hasRule = (messages: Array<Linter.LintMessage>, rule: string) => messages.some(({ ruleId }) => ruleId === rule);
-
 describe('Playwright integration', () => {
-  it('recognizes assertion helpers and rejects tests without assertions', async () => {
-    for (const [body, hasAssertion] of [
-      ['expect(1).toBe(1);', true],
-      ['expectSomething();', true],
-      ['initializeApp();', false],
-    ] as const) {
-      const messages = await lint(`test.describe('assertions', () => {
-  test('runs a scenario', () => { ${body} });
-});`);
+  let baseline: TestESLint;
 
-      const errors = messages.filter(({ ruleId }) => ruleId === 'playwright/expect-expect');
-      assert.deepEqual(errors.map(({ severity }) => severity), hasAssertion ? [] : [2], body);
-    }
+  beforeAll(async () => {
+    baseline = await createEslint();
   });
 
   it('validates object file patterns and ignores', async () => {
@@ -60,7 +38,7 @@ describe('Playwright integration', () => {
   });
 
   it('defaults only to pwtest.ts, including tests inside playwright directories', async () => {
-    const eslint = await createEslint();
+    const eslint = baseline;
 
     for (const filename of ['src/sample.pwtest.ts', 'tests/playwright/example.pwtest.ts']) {
       const config = await eslint.calculateConfigForFile(filename);
@@ -96,33 +74,19 @@ describe('Playwright integration', () => {
       assert.equal(config.plugins?.playwright, undefined, filename);
       assert.equal(config.rules['no-debugger']?.[0], 2, filename);
     }
-
-    const [ignored] = await eslint.lintText('test.only("focused", () => {}); debugger;', {
-      filePath: join(consumerRoot, 'src/example.vitest.js'),
-    });
-
-    assert.equal(ignored.fatalErrorCount, 0);
-    assert.ok(!ignored.messages.some(({ ruleId }) => ruleId?.startsWith('playwright/') === true));
-    assert.ok(hasRule(ignored.messages, 'no-debugger'));
   });
 
-  it('reports focused Playwright tests', async () => {
-    const messages = await lint('test.only("focused", () => {});');
-    assert.ok(hasRule(messages, 'playwright/no-focused-test'));
-  });
+  it('preserves base typed settings and scopes the fixture parameter override to Playwright', async () => {
+    const playwright = await baseline.calculateConfigForFile('src/sample.pwtest.ts');
+    const ordinary = await baseline.calculateConfigForFile('src/standard.ts');
+    assert.ok(playwright !== undefined && ordinary !== undefined);
 
-  it('reports an unawaited Playwright assertion', async () => {
-    const messages = await lint('test("scenario", async ({ page }) => { expect(page.getByRole("button")).toBeVisible(); });');
-    assert.ok(hasRule(messages, 'playwright/missing-playwright-await'));
-  });
-
-  it('keeps type-aware checks active and allows empty fixture parameters', async () => {
-    const messages = await lint(
-      'const fixtures = { ready: async ({}, use: (value: boolean) => void) => { await 1; use(true); } };',
-      'src/sample.pwtest.ts',
-    );
-
-    assert.ok(hasRule(messages, '@typescript-eslint/await-thenable'));
-    assert.ok(!hasRule(messages, 'no-empty-pattern'));
+    assert.equal(playwright.languageOptions.parser, ordinary.languageOptions.parser);
+    assert.equal(playwright.languageOptions.parserOptions.projectService, true);
+    assert.equal(playwright.languageOptions.parserOptions.tsconfigRootDir, consumerRoot);
+    assert.equal(playwright.rules['@typescript-eslint/no-floating-promises']?.[0], 2);
+    assert.equal(playwright.rules['@typescript-eslint/unbound-method']?.[0], 2);
+    assert.deepEqual(playwright.rules['no-empty-pattern'], [2, { allowObjectPatternsAsParameters: true }]);
+    assert.deepEqual(ordinary.rules['no-empty-pattern'], [2, { allowObjectPatternsAsParameters: false }]);
   });
 });

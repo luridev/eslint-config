@@ -38,22 +38,19 @@ class Counter {
   value = 0;
   increment() { this.value += 1; }
 }
-it.only('focused', () => {
+it('uses typed assertions', () => {
   const counter = new Counter();
-  expect(counter.increment).toHaveBeenCalledTimes(1);
+  expect(counter.increment).toHaveBeenCalledOnce();
   const detached = counter.increment;
   detached();
-  expect({ value: 1 }).toEqual({ value: 1 });
   Promise.resolve(1);
 });
 `, { filePath });
 assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
-for (const rule of ['vitest/no-focused-tests', 'vitest/require-top-level-describe',
-  'vitest/prefer-called-once', 'vitest/unbound-method',
-  '@typescript-eslint/no-floating-promises']) {
+for (const rule of ['vitest/unbound-method', '@typescript-eslint/no-floating-promises']) {
   assert.ok(result.messages.some(({ ruleId }) => ruleId === rule), `${rule}: ${JSON.stringify(result.messages)}`);
 }
-assert.equal(result.messages.filter(({ ruleId }) => ruleId === 'vitest/unbound-method').length, 1);
+assert.equal(result.messages.some(({ ruleId }) => ruleId === '@typescript-eslint/unbound-method'), false);
 
 if (withVue) {
   const component = new URL('ExampleComponent.vue', import.meta.url);

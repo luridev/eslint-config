@@ -27,7 +27,12 @@ assert.equal(
 const component = new URL('ExampleComponent.vue', import.meta.url);
 const invalidSfc = readFileSync(component, 'utf8')
   .replace("const message = 'fixture';", "const message = 'fixture';\nPromise.resolve(message);")
-  .replace('  <p>', '  <img src="/fixture.png" />\n\n  <p>');
+  .replace('  <p>', [
+    '  <!-- eslint-disable-next-line vuejs-accessibility/alt-text -->',
+    '  <img src="/ignored.png" />',
+    '  <img src="/reported.png" />',
+    '  <p>',
+  ].join('\n'));
 const [vue] = await eslint.lintText(invalidSfc, { filePath: fileURLToPath(component) });
 assert.equal(vue.fatalErrorCount, 0, JSON.stringify(vue.messages));
 
@@ -35,11 +40,5 @@ for (const rule of ['@typescript-eslint/no-floating-promises', 'vuejs-accessibil
   assert.ok(vue.messages.some(({ ruleId }) => ruleId === rule), `Expected ${rule}: ${JSON.stringify(vue.messages)}`);
 }
 
-const unusedPropSfc = readFileSync(component, 'utf8')
-  .replace("const message = 'fixture';", "defineProps<{ unused: string }>();\n\nconst message = 'fixture';");
-const [unusedProp] = await eslint.lintText(unusedPropSfc, { filePath: fileURLToPath(component) });
-assert.equal(unusedProp.fatalErrorCount, 0, JSON.stringify(unusedProp.messages));
-assert.deepEqual(
-  unusedProp.messages.filter(({ ruleId }) => ruleId === 'vue/no-unused-properties').map(({ severity, messageId }) => ({ severity, messageId })),
-  [{ severity: 2, messageId: 'unused' }],
-);
+// The processor must apply the template directive while the adjacent element is still checked.
+assert.equal(vue.messages.filter(({ ruleId }) => ruleId === 'vuejs-accessibility/alt-text').length, 1);

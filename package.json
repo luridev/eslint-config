@@ -30,7 +30,7 @@
     "prepublishOnly": "npm --dry-run=false run check:commit",
     "prerelease": "jiti scripts/checkRelease.ts",
     "release": "npm run check:commit && bumpp",
-    "test": "npm run test:unit && npm run test:package",
+    "test": "npm run build && vitest run && jiti scripts/verifyPackage.ts",
     "test:package": "npm run build && jiti scripts/verifyPackage.ts",
     "test:unit": "npm run build && vitest run",
     "typecheck": "tsc -p tsconfig.json"

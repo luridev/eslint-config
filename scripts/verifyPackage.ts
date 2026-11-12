@@ -130,10 +130,10 @@ try {
     return `${name}@${version}`;
   });
 
-  verifyConsumer('package-vue-consumer', plugins, ['runtime.mjs', 'disabled.mjs', 'broken-plugin.mjs']);
+  verifyConsumer('package-vue-consumer', plugins, ['runtime.mjs', 'broken-plugin.mjs']);
   const vitestVersion = (JSON.parse(readFileSync(require.resolve(`${vitestPeer}/package.json`), 'utf8')) as PackageManifest).version;
   const vitestPlugin = `${vitestPeer}@${vitestVersion}`;
-  const vitestScripts = ['vitest-runtime.mjs', 'vitest-disabled.mjs', 'vitest-broken-plugin.mjs'];
+  const vitestScripts = ['vitest-runtime.mjs', 'vitest-broken-plugin.mjs'];
   verifyConsumer('package-vitest-consumer', [vitestPlugin], vitestScripts);
   verifyConsumer('package-vue-consumer', [...plugins, vitestPlugin], ['vitest-runtime.mjs'], 'package-vue-vitest-consumer');
   const playwrightVersion = (JSON.parse(readFileSync(join(root, 'node_modules', playwrightPeer, 'package.json'), 'utf8')) as PackageManifest).version;

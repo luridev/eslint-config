@@ -9,7 +9,7 @@ const hooks = registerHooks({
     if (url === pluginUrl) {
       return {
         format: 'module',
-        source: `const error = new Error(${JSON.stringify(message)}); error.code = 'MODULE_NOT_FOUND'; throw error; export default {};`,
+        source: `const error = new Error(${JSON.stringify(message)}); error.code = 'ERR_MODULE_NOT_FOUND'; throw error; export default {};`,
         shortCircuit: true,
       };
     }
@@ -21,7 +21,7 @@ const hooks = registerHooks({
 try {
   const { createProtoConfig } = await import('@protoapps/eslint-config');
   const tsconfigRootDir = fileURLToPath(new URL('.', import.meta.url));
-  await assert.rejects(() => createProtoConfig({ tsconfigRootDir, vitest: true }), { message, code: 'MODULE_NOT_FOUND' });
+  await assert.rejects(() => createProtoConfig({ tsconfigRootDir, vitest: true }), { message, code: 'ERR_MODULE_NOT_FOUND' });
   assert.ok(Array.isArray(await createProtoConfig({ tsconfigRootDir, vitest: false })));
 } finally {
   hooks.deregister();
