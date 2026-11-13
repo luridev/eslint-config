@@ -9,10 +9,6 @@ import type { SpawnSyncReturns } from 'node:child_process';
 
 type NpmRunResult = SpawnSyncReturns<string | null>;
 
-type NpmPackResult = {
-  filename: string;
-};
-
 type PackageManifest = {
   name: string;
   version: string;
@@ -63,9 +59,14 @@ const temporaryRoot = mkdtempSync(join(temporaryDirectory, 'protoapps-eslint-pac
 process.stdout.write(`[package] Temporary root: ${temporaryRoot}\n`);
 
 try {
-  const packed = JSON.parse(run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temporaryRoot], root, true)) as Array<NpmPackResult>;
+  const packData: unknown = JSON.parse(run('npm', ['pack', '--json', '--ignore-scripts', '--pack-destination', temporaryRoot], root, true));
+  assert.ok(typeof packData === 'object' && packData !== null, 'npm pack must return an array or object.');
+  const packed: Array<unknown> = Array.isArray(packData) ? packData : Object.values(packData);
   assert.equal(packed.length, 1, 'npm pack must produce one archive.');
-  const { filename } = packed[0];
+  const [tarball] = packed;
+  assert.ok(typeof tarball === 'object' && tarball !== null, 'npm pack must return package metadata.');
+  assert.ok('filename' in tarball && typeof tarball.filename === 'string', 'npm pack must return a filename.');
+  const { filename } = tarball;
   assert.equal(basename(filename), filename, 'The archive must remain inside the temporary root.');
   const archive = join(temporaryRoot, filename);
 
