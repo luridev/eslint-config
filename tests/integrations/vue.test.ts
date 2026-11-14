@@ -102,7 +102,12 @@ describe('Vue integration', () => {
 
     assert.ok(resolver !== undefined);
 
-    for (const [specifier, filename] of [['@fixture/component', 'component.vue'], ['@fixture/custom', 'custom.custom']]) {
+    const cases: Array<[specifier: string, filename: string]> = [
+      ['@fixture/component', 'component.vue'],
+      ['@fixture/custom', 'custom.custom'],
+    ];
+
+    for (const [specifier, filename] of cases) {
       const result = resolver.resolve(specifier, join(consumerRoot, 'src/component.vue'));
       assert.equal(result.found, true);
       assert.equal(normalize(result.path ?? ''), normalize(join(consumerRoot, 'src', filename)));

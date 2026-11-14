@@ -1,8 +1,11 @@
 import importX from 'eslint-plugin-import-x';
 import unusedImports from 'eslint-plugin-unused-imports';
-import type { Linter } from 'eslint';
+import type { ESLint, Linter } from 'eslint';
 
-export const importPlugins: NonNullable<Linter.Config['plugins']> = { 'import-x': importX, 'unused-imports': unusedImports };
+export const importPlugins: Record<'import-x' | 'unused-imports', ESLint.Plugin> = {
+  'import-x': importX,
+  'unused-imports': unusedImports,
+};
 
 export const importRules: Linter.RulesRecord = {
   'import-x/no-extraneous-dependencies': ['error', { includeTypes: true }],

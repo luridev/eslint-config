@@ -57,6 +57,7 @@ describe('File and directory naming', () => {
 
   it.each(paths)('applies the naming policy to %s', async (filename, filenameErrors, folderErrors) => {
     const [result] = await eslint.lintFiles([join(root, filename)]);
+    assert.ok(result !== undefined, `Expected a lint result for ${filename}`);
     assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
     assert.equal(result.messages.filter(({ ruleId }) => ruleId === 'check-file/filename-naming-convention').length, filenameErrors);
     assert.equal(result.messages.filter(({ ruleId }) => ruleId === 'check-file/folder-naming-convention').length, folderErrors);
@@ -67,6 +68,7 @@ describe('File and directory naming', () => {
       filePath: join(root, '.custom-config/bad-folder/.hidden-name.js'),
     });
 
+    assert.ok(result !== undefined, 'Expected a lint result for the dot-prefixed directory fixture');
     assert.equal(result.fatalErrorCount, 0, JSON.stringify(result.messages));
     assert.equal(result.messages.filter(({ ruleId }) => ruleId === 'check-file/filename-naming-convention').length, 0);
     assert.equal(result.messages.filter(({ ruleId }) => ruleId === 'check-file/folder-naming-convention').length, 1);
